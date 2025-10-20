@@ -93,9 +93,12 @@ def interpret_prompt_with_bedrock(prompt: str) -> Dict[str, Any]:
     Uses Amazon Bedrock to interpret the user's prompt and extract musical parameters.
     """
     system_prompt = """You are a music expert who interprets user requests to create playlists.
-Analyze the user's prompt and extract the following parameters in JSON format:
+Analyze the user's prompt and suggest specific songs, artists, or search terms that match the request.
 
-- genres: list of musical genres (e.g., ["pop", "rock", "electronic"])
+Return a JSON with these parameters:
+
+- search_terms: list of 3-5 specific search queries (e.g., ["Coldplay Fix You", "Adele Someone Like You", "sad piano"])
+- genres: list of musical genres (e.g., ["pop", "rock", "electronic"]) - optional
 - mood: the mood (e.g., "happy", "sad", "energetic", "chill", "party")
 - energy: energy level from 0.0 to 1.0
 - danceability: how danceable from 0.0 to 1.0
@@ -104,6 +107,12 @@ Analyze the user's prompt and extract the following parameters in JSON format:
 - popularity: minimum popularity from 0 to 100
 - playlist_name: suggested name for the playlist
 - limit: number of songs (default 20, maximum 50)
+
+IMPORTANT: Always provide search_terms with specific song names, artist names, or descriptive keywords.
+For example:
+- "music for studying" → ["lofi hip hop", "study beats", "ambient piano", "calm instrumental"]
+- "workout music" → ["Eye of the Tiger", "Lose Yourself Eminem", "pump up songs", "gym motivation"]
+- "relaxing music" → ["Weightless Marconi Union", "Clair de Lune", "ambient sleep", "meditation music"]
 
 Respond ONLY with the JSON, without additional text."""
 
@@ -204,81 +213,91 @@ def get_spotify_client_token() -> Optional[str]:
 
 def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List[Dict[str, Any]]:
     """
-    Searches for tracks on Spotify based on musical parameters.
+    Searches for tracks on Spotify using AI-suggested search terms.
     """
-    # Use the user's token for searches
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
     
-    # Build search query
-    genres = parameters.get('genres', ['pop'])
-    genre_query = ' OR '.join([f'genre:"{g}"' for g in genres[:2]])  # Maximum of 2 genres
+    search_terms = parameters.get('search_terms', [])
+    genres = parameters.get('genres', [])
+    mood = parameters.get('mood', '')
+    min_popularity = parameters.get('popularity', 30)  # Lower threshold
+    limit = min(parameters.get('limit', 20), 50)
     
+    # Collect tracks from multiple searches
+    all_tracks_dict = {}  # Use dict to avoid duplicates by URI
+    
+    # Build search queries
+    queries = []
+    
+    # Priority 1: AI-suggested search terms (BEST)
+    if search_terms:
+        queries.extend(search_terms[:5])
+        print(f"Using AI search terms: {search_terms[:5]}")
+    
+    # Priority 2: Genres
+    elif genres:
+        for genre in genres[:3]:
+            queries.append(f'genre:"{genre}"')
+        print(f"Using genres: {genres[:3]}")
+    
+    # Priority 3: Mood
+    elif mood:
+        queries.append(mood)
+        print(f"Using mood: {mood}")
+    
+    # Fallback: Recent popular music
+    else:
+        queries.append('year:2020-2024')
+        print("Using fallback: recent years")
+    
+    # Search with each query
     search_url = 'https://api.spotify.com/v1/search'
-    search_params = {
-        'q': genre_query,
-        'type': 'track',
-        'limit': 50,  # Search for more to filter later
-        'market': 'US'
-    }
     
-    try:
-        response = requests.get(search_url, headers=headers, params=search_params, timeout=10)
-        response.raise_for_status()
-        tracks_data = response.json()
-        
-        # Get track IDs
-        track_ids = [track['id'] for track in tracks_data['tracks']['items']]
-        
-        if not track_ids:
-            return []
-        
-        # Get audio features to filter
-        features_url = 'https://api.spotify.com/v1/audio-features'
-        features_params = {
-            'ids': ','.join(track_ids[:50])  # Maximum of 50 IDs
-        }
-        
-        features_response = requests.get(features_url, headers=headers, params=features_params, timeout=10)
-        features_response.raise_for_status()
-        audio_features = features_response.json()['audio_features']
-        
-        # Filter tracks based on parameters
-        filtered_tracks = []
-        target_energy = parameters.get('energy', 0.5)
-        target_danceability = parameters.get('danceability', 0.5)
-        target_valence = parameters.get('valence', 0.5)
-        min_popularity = parameters.get('popularity', 50)
-        limit = min(parameters.get('limit', 20), 50)
-        
-        for track, features in zip(tracks_data['tracks']['items'], audio_features):
-            if features is None:
-                continue
+    for query in queries:
+        try:
+            print(f"Searching: {query}")
+            search_params = {
+                'q': query,
+                'type': 'track',
+                'limit': 20,  # Get 20 per query
+                'market': 'US'
+            }
             
-            # Calculate similarity score
-            energy_diff = abs(features['energy'] - target_energy)
-            dance_diff = abs(features['danceability'] - target_danceability)
-            valence_diff = abs(features['valence'] - target_valence)
+            response = requests.get(search_url, headers=headers, params=search_params, timeout=10)
+            response.raise_for_status()
+            tracks_data = response.json()
             
-            score = 1 - (energy_diff + dance_diff + valence_diff) / 3
+            # Add tracks to collection (avoiding duplicates)
+            for track in tracks_data['tracks']['items']:
+                if track['uri'] not in all_tracks_dict and track['popularity'] >= min_popularity:
+                    all_tracks_dict[track['uri']] = {
+                        'uri': track['uri'],
+                        'name': track['name'],
+                        'artist': track['artists'][0]['name'],
+                        'popularity': track['popularity'],
+                        'id': track['id']
+                    }
             
-            # Filter by popularity
-            if track['popularity'] >= min_popularity:
-                filtered_tracks.append({
-                    'uri': track['uri'],
-                    'name': track['name'],
-                    'artist': track['artists'][0]['name'],
-                    'score': score
-                })
-        
-        # Sort by score and take the best ones
-        filtered_tracks.sort(key=lambda x: x['score'], reverse=True)
-        return filtered_tracks[:limit]
-        
-    except Exception as e:
-        print(f"Error searching Spotify tracks: {str(e)}")
+            print(f"Found {len(tracks_data['tracks']['items'])} tracks for query: {query}")
+            
+        except Exception as e:
+            print(f"Error searching with query '{query}': {str(e)}")
+            continue
+    
+    if not all_tracks_dict:
+        print("No tracks found with any query")
         return []
+    
+    print(f"Total unique tracks collected: {len(all_tracks_dict)}")
+    
+    # Convert to list and sort by popularity
+    filtered_tracks = list(all_tracks_dict.values())
+    filtered_tracks.sort(key=lambda x: x['popularity'], reverse=True)
+    
+    # Return top tracks
+    return filtered_tracks[:limit]
 
 
 def create_spotify_playlist(

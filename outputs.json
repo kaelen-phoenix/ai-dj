@@ -1,0 +1,10 @@
+{
+  "AiDjStack": {
+    "SpotifyRedirectURI": "https://d1z4qoq01pmvv3.cloudfront.net/",
+    "DynamoDBTableName": "AI-DJ-Users",
+    "OAuthCallbackURL": "https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/callback",
+    "ApiEndpoint": "https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/",
+    "LambdaFunctionName": "AI-DJ-Handler",
+    "FrontendURL": "https://d1z4qoq01pmvv3.cloudfront.net"
+  }
+}

@@ -1,0 +1,10 @@
+﻿{
+    "max_tokens":  100,
+    "messages":  [
+                     {
+                         "content":  "Di \u0027Hola, Bedrock funciona!\u0027 en una sola linea",
+                         "role":  "user"
+                     }
+                 ],
+    "anthropic_version":  "bedrock-2023-05-31"
+}

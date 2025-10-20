@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI DJ - AI-Powered Playlist Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #232F3E 0%, #131A22 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(255, 153, 0, 0.3);
+        }
+
+        .main-content {
+            background: rgba(35, 47, 62, 0.8);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 153, 0, 0.2);
+        }
+
+        h1 {
+            color: #232F3E;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #b3b3b3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #fff;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #FF9900;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #EC7211 0%, #FF9900 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #1DB954;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(29, 185, 84, 0.3);
+            border-top: 3px solid #1DB954;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(29, 185, 84, 0.1);
+            border: 2px solid #1DB954;
+            border-radius: 10px;
+        }
+
+        .result h3 {
+            color: #1DB954;
+            margin-bottom: 15px;
+        }
+
+        .result p {
+            color: #fff;
+            margin: 10px 0;
+        }
+
+        .result a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #1DB954;
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .result a:hover {
+            background: #1ed760;
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            color: #ff4444;
+        }
+
+        .info-box {
+            background: rgba(29, 185, 84, 0.1);
+            border-left: 4px solid #1DB954;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: #b3b3b3;
+            font-size: 14px;
+        }
+
+        .examples {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .examples p {
+            color: #b3b3b3;
+            font-size: 13px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .examples p:hover {
+            color: #1DB954;
+        }
+
+        .auth-section {
+            background: rgba(29, 185, 84, 0.1);
+            border: 2px solid #1DB954;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auth-section.connected {
+            border-color: #1DB954;
+            background: rgba(29, 185, 84, 0.2);
+        }
+
+        .auth-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .auth-btn:hover {
+            background: linear-gradient(135deg, #1ed760 0%, #1DB954 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+        }
+
+        .auth-btn.disconnect {
+            background: #666;
+        }
+
+        .auth-btn.disconnect:hover {
+            background: #888;
+        }
+
+        .user-info {
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Footer with tech logos */
+        .tech-footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(35, 47, 62, 0.8);
+            border-radius: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 153, 0, 0.2);
+        }
+
+        .tech-footer h3 {
+            color: #FF9900;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .tech-logos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .tech-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s;
+            min-height: 100px;
+        }
+
+        .tech-logo:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .tech-logo svg {
+            height: 35px;
+            width: auto;
+        }
+
+        .tech-logo span {
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Hide user ID field */
+        #userId {
+            display: none;
+        }
+        
+        .input-group:has(#userId) {
+            display: none;
+        }
+
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 2em !important;
+            }
+
+            .header p {
+                font-size: 14px !important;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            button {
+                font-size: 16px;
+                padding: 12px;
+            }
+
+            .examples {
+                gap: 8px;
+            }
+
+            .examples p {
+                font-size: 13px;
+                padding: 10px;
+            }
+
+            .tech-footer {
+                padding: 25px 15px;
+            }
+
+            .tech-footer h3 {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .tech-logos {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .tech-logo {
+                padding: 15px 10px;
+                min-height: 80px;
+            }
+
+            .tech-logo svg {
+                height: 28px;
+            }
+
+            .tech-logo span {
+                font-size: 10px;
+            }
+
+            .result h3, .error strong {
+                font-size: 18px;
+            }
+
+            .result p, .error p {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em !important;
+            }
+
+            .header {
+                padding: 15px 10px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .tech-logos {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .tech-logo {
+                padding: 12px 8px;
+                min-height: 70px;
+            }
+
+            .tech-logo svg {
+                height: 24px;
+            }
+
+            textarea {
+                min-height: 80px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="color: #000; margin: 0;">🎵 AI DJ</h1>
+            <p style="color: #000; margin-top: 10px; font-size: 18px;">Create personalized playlists with Artificial Intelligence</p>
+        </div>
+
+        <div class="main-content">
+
+        <div class="auth-section" id="authSection">
+            <div id="notConnected">
+                <p style="color: #fff; margin-bottom: 15px;">
+                    <strong>🔐 Connect with Spotify</strong><br>
+                    <span style="font-size: 14px; color: #b3b3b3;">
+                        You need to authorize the app to create real playlists
+                    </span>
+                </p>
+                <button class="auth-btn" onclick="loginWithSpotify()">
+                    Connect with Spotify
+                </button>
+            </div>
+            <div id="connected" class="hidden">
+                <p style="color: #1DB954; margin-bottom: 10px;">
+                    <strong>✅ Connected to Spotify</strong>
+                </p>
+                <p class="user-info" id="userInfo"></p>
+                <button class="auth-btn disconnect" onclick="logout()">
+                    Disconnect
+                </button>
+            </div>
+        </div>
+
+        <form id="playlistForm">
+            <div class="input-group">
+                <label for="userId">Spotify User ID:</label>
+                <input type="text" id="userId" placeholder="Your Spotify User ID" required>
+            </div>
+
+            <label for="prompt">Describe your playlist:</label>
+            <textarea 
+                id="prompt" 
+                name="prompt" 
+                rows="4" 
+                placeholder="E.g.: Energetic music for workout, some rock and electronic"
+                required
+            ></textarea>
+
+            <div class="examples">
+                <strong>💡 Examples:</strong>
+                <p onclick="setPrompt('Relaxing music for studying')">🎧 Relaxing music for studying</p>
+                <p onclick="setPrompt('Latin party with reggaeton and salsa')">🎉 Latin party with reggaeton and salsa</p>
+                <p onclick="setPrompt('Classic 80s rock')">🎸 Classic 80s rock</p>
+                <p onclick="setPrompt('Smooth jazz for working')">🎷 Smooth jazz for working</p>
+            </div>
+
+            <button type="submit" id="submitBtn">Generate Playlist with AI 🤖</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Creating your perfect playlist...</p>
+        </div>
+
+        <div class="result" id="result">
+            <h3>✅ Playlist Created!</h3>
+            <div id="resultContent"></div>
+        </div>
+
+        <div class="error" id="error">
+            <strong>❌ Error:</strong>
+            <p id="errorMessage"></p>
+        </div>
+        </div> <!-- Close main-content -->
+
+        <!-- Tech Stack Footer -->
+        <div class="tech-footer">
+            <h3>Built With</h3>
+            <div class="tech-logos">
+                <!-- AWS - Main Logo (Larger) -->
+                <div class="tech-logo" style="grid-column: span 2;">
+                    <svg height="50" viewBox="0 0 304 182" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M86.4 66.4c0 3.7.4 6.7 1.1 8.9.8 2.2 1.8 4.6 3.2 7.2.5.8.7 1.6.7 2.3 0 1-.6 2-1.9 3l-6.3 4.2c-.9.6-1.8.9-2.6.9-1 0-2-.5-3-1.4-1.4-1.5-2.6-3.1-3.6-4.7-1-1.7-2-3.6-3.1-5.9-7.8 9.2-17.6 13.8-29.4 13.8-8.4 0-15.1-2.4-20-7.2-4.9-4.8-7.4-11.2-7.4-19.2 0-8.5 3-15.4 9.1-20.6 6.1-5.2 14.2-7.8 24.5-7.8 3.4 0 6.9.3 10.6.8 3.7.5 7.5 1.3 11.5 2.2v-7.3c0-7.6-1.6-12.9-4.7-16-3.2-3.1-8.6-4.6-16.3-4.6-3.5 0-7.1.4-10.8 1.3-3.7.9-7.3 2-10.8 3.4-1.6.7-2.8 1.1-3.5 1.3-.7.2-1.2.3-1.6.3-1.4 0-2.1-1-2.1-3.1v-4.9c0-1.6.2-2.8.7-3.5.5-.7 1.4-1.4 2.8-2.1 3.5-1.8 7.7-3.3 12.6-4.5 4.9-1.3 10.1-1.9 15.6-1.9 11.9 0 20.6 2.7 26.2 8.1 5.5 5.4 8.3 13.6 8.3 24.6v32.4zm-40.6 15.2c3.3 0 6.7-.6 10.3-1.8 3.6-1.2 6.8-3.4 9.5-6.4 1.6-1.9 2.8-4 3.4-6.4.6-2.4 1-5.3 1-8.7v-4.2c-2.9-.7-6-1.3-9.2-1.7-3.2-.4-6.3-.6-9.4-.6-6.7 0-11.6 1.3-14.9 4-3.3 2.7-4.9 6.5-4.9 11.5 0 4.7 1.2 8.2 3.7 10.6 2.4 2.5 5.9 3.7 10.5 3.7zm80.3 10.8c-1.8 0-3-.3-3.8-1-.8-.6-1.5-2-2.1-3.9L96.7 10.2c-.6-2-.9-3.3-.9-4 0-1.6.8-2.5 2.4-2.5h9.8c1.9 0 3.2.3 3.9 1 .8.6 1.4 2 2 3.9l16.8 66.2 15.6-66.2c.5-2 1.1-3.3 1.9-3.9.8-.6 2.2-1 4-1h8c1.9 0 3.2.3 4 1 .8.6 1.5 2 1.9 3.9l15.8 67 17.3-67c.6-2 1.3-3.3 2-3.9.8-.6 2.1-1 3.9-1h9.3c1.6 0 2.5.8 2.5 2.5 0 .5-.1 1-.2 1.6-.1.6-.3 1.4-.7 2.5l-24.1 77.3c-.6 2-1.3 3.3-2.1 3.9-.8.6-2.1 1-3.8 1h-8.6c-1.9 0-3.2-.3-4-1-.8-.7-1.5-2-1.9-4L156 23l-15.4 64.4c-.5 2-1.1 3.3-1.9 4-.8.7-2.2 1-4 1h-8.6zm128.5 2.7c-5.2 0-10.4-.6-15.4-1.8-5-1.2-8.9-2.5-11.5-4-1.6-.9-2.7-1.9-3.1-2.8-.4-.9-.6-1.9-.6-2.8v-5.1c0-2.1.8-3.1 2.3-3.1.6 0 1.2.1 1.8.3.6.2 1.5.6 2.5 1 3.4 1.5 7.1 2.7 11 3.5 4 .8 7.9 1.2 11.9 1.2 6.3 0 11.2-1.1 14.6-3.3 3.4-2.2 5.2-5.4 5.2-9.5 0-2.8-.9-5.1-2.7-7-1.8-1.9-5.2-3.6-10.1-5.2L246 52c-7.3-2.3-12.7-5.7-16-10.2-3.3-4.4-5-9.3-5-14.5 0-4.2.9-7.9 2.7-11.1 1.8-3.2 4.2-6 7.2-8.2 3-2.3 6.4-4 10.4-5.2 4-1.2 8.2-1.7 12.6-1.7 2.2 0 4.5.1 6.7.4 2.3.3 4.4.7 6.5 1.1 2 .5 3.9 1 5.7 1.6 1.8.6 3.2 1.2 4.2 1.8 1.4.8 2.4 1.6 3 2.5.6.8.9 1.9.9 3.3v4.7c0 2.1-.8 3.2-2.3 3.2-.8 0-2.1-.4-3.8-1.2-5.7-2.6-12.1-3.9-19.2-3.9-5.7 0-10.2.9-13.3 2.8-3.1 1.9-4.7 4.8-4.7 8.9 0 2.8 1 5.2 3 7.1 2 1.9 5.7 3.8 11 5.5l14.2 4.5c7.2 2.3 12.4 5.5 15.5 9.6 3.1 4.1 4.6 8.8 4.6 14 0 4.3-.9 8.2-2.6 11.6-1.8 3.4-4.2 6.4-7.3 8.8-3.1 2.5-6.8 4.3-11.1 5.6-4.5 1.4-9.2 2.1-14.3 2.1z" fill="#FF9900"/>
+                        <path d="M273.5 143.7c-32.9 24.3-80.7 37.2-121.8 37.2-57.6 0-109.5-21.3-148.7-56.7-3.1-2.8-.3-6.6 3.4-4.4 42.4 24.6 94.7 39.5 148.8 39.5 36.5 0 76.6-7.6 113.5-23.2 5.5-2.5 10.2 3.6 4.8 7.6z" fill="#FF9900"/>
+                        <path d="M287.2 128.1c-4.2-5.4-27.8-2.6-38.5-1.3-3.2.4-3.7-2.4-.8-4.5 18.8-13.2 49.7-9.4 53.3-5 3.6 4.5-1 35.4-18.6 50.2-2.7 2.3-5.3 1.1-4.1-1.9 4-9.9 12.9-32.2 8.7-37.5z" fill="#FF9900"/>
+                    </svg>
+                    <span style="font-size: 13px; font-weight: 600;">Amazon Web Services</span>
+                </div>
+                
+                <!-- Spotify -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 168 168" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M83.996 0.277c-46.249 0-83.743 37.493-83.743 83.742 0 46.251 37.494 83.741 83.743 83.741 46.254 0 83.744-37.49 83.744-83.741 0-46.246-37.49-83.738-83.745-83.738l0.001-0.004zm38.404 120.78c-1.5 2.46-4.72 3.24-7.18 1.73-19.662-12.01-44.414-14.73-73.564-8.07-2.809 0.64-5.609-1.12-6.249-3.93-0.643-2.81 1.11-5.61 3.926-6.25 31.9-7.291 59.263-4.15 81.337 9.34 2.46 1.51 3.24 4.72 1.73 7.18zm10.25-22.805c-1.89 3.075-5.91 4.045-8.98 2.155-22.51-13.839-56.823-17.846-83.448-9.764-3.453 1.043-7.1-0.903-8.148-4.35-1.04-3.453 0.907-7.093 4.354-8.143 30.413-9.228 68.222-4.758 94.072 11.127 3.07 1.89 4.04 5.91 2.15 8.976v-0.001zm0.88-23.744c-26.99-16.031-71.52-17.505-97.289-9.684-4.138 1.255-8.514-1.081-9.768-5.219-1.254-4.14 1.08-8.513 5.221-9.771 29.581-8.98 78.756-7.245 109.83 11.202 3.73 2.209 4.95 7.016 2.74 10.733-2.2 3.722-7.02 4.949-10.73 2.739z" fill="#1DB954"/>
+                    </svg>
+                    <span>Spotify API</span>
+                </div>
+                
+                <!-- AWS Lambda -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M128 0L25.6 51.2v153.6L128 256l102.4-51.2V51.2L128 0zm76.8 179.2L128 217.6l-76.8-38.4V76.8L128 38.4l76.8 38.4v102.4z" fill="#FF9900"/>
+                        <path d="M128 64L64 96v64l64 32 64-32V96l-64-32z" fill="#FF9900"/>
+                    </svg>
+                    <span>AWS Lambda</span>
+                </div>
+                
+                <!-- Amazon Bedrock -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="80" height="80" rx="8" fill="#FF9900"/>
+                        <text x="40" y="55" font-family="Arial" font-size="48" font-weight="bold" fill="#232F3E" text-anchor="middle">B</text>
+                    </svg>
+                    <span>Amazon Bedrock</span>
+                </div>
+                
+                <!-- Anthropic Claude -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#D4A574"/>
+                        <text x="50" y="65" font-family="Arial" font-size="40" font-weight="bold" fill="#000" text-anchor="middle">C</text>
+                    </svg>
+                    <span>Claude AI</span>
+                </div>
+                
+                <!-- API Gateway -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="80" height="80" rx="8" fill="#FF4F8B"/>
+                        <path d="M20 40h15M45 40h15M40 20v15M40 45v15" stroke="#FFF" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="40" cy="40" r="8" fill="#FFF"/>
+                    </svg>
+                    <span>API Gateway</span>
+                </div>
+                
+                <!-- DynamoDB -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="80" height="80" rx="8" fill="#527FFF"/>
+                        <ellipse cx="40" cy="30" rx="25" ry="8" fill="#FFF"/>
+                        <path d="M15 30v20c0 4.4 11.2 8 25 8s25-3.6 25-8V30" fill="#FFF" opacity="0.7"/>
+                        <ellipse cx="40" cy="50" rx="25" ry="8" fill="#FFF"/>
+                    </svg>
+                    <span>DynamoDB</span>
+                </div>
+                
+                <!-- CloudFront -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="80" height="80" rx="8" fill="#8C4FFF"/>
+                        <circle cx="40" cy="40" r="20" fill="none" stroke="#FFF" stroke-width="3"/>
+                        <circle cx="40" cy="40" r="12" fill="none" stroke="#FFF" stroke-width="3"/>
+                        <circle cx="40" cy="40" r="4" fill="#FFF"/>
+                    </svg>
+                    <span>CloudFront</span>
+                </div>
+                
+                <!-- Python -->
+                <div class="tech-logo">
+                    <svg height="35" viewBox="0 0 256 255" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="pyYellow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#FFD43B"/>
+                                <stop offset="100%" style="stop-color:#FFE873"/>
+                            </linearGradient>
+                            <linearGradient id="pyBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#306998"/>
+                                <stop offset="100%" style="stop-color:#4B8BBE"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M126.916.072c-64.832 0-60.784 28.115-60.784 28.115l.072 29.128h61.868v8.745H41.631S.145 61.355.145 126.77c0 65.417 36.21 63.097 36.21 63.097h21.61v-30.356s-1.165-36.21 35.632-36.21h61.362s34.475.557 34.475-33.319V33.97S194.67.072 126.916.072zM92.802 19.66a11.12 11.12 0 0 1 11.13 11.13 11.12 11.12 0 0 1-11.13 11.13 11.12 11.12 0 0 1-11.13-11.13 11.12 11.12 0 0 1 11.13-11.13z" fill="url(#pyBlue)"/>
+                        <path d="M128.757 254.126c64.832 0 60.784-28.115 60.784-28.115l-.072-29.127H127.6v-8.745h86.441s41.486 4.705 41.486-60.712c0-65.416-36.21-63.096-36.21-63.096h-21.61v30.355s1.165 36.21-35.632 36.21h-61.362s-34.475-.557-34.475 33.32v56.013s-5.235 33.897 62.518 33.897zm34.114-19.586a11.12 11.12 0 0 1-11.13-11.13 11.12 11.12 0 0 1 11.13-11.131 11.12 11.12 0 0 1 11.13 11.13 11.12 11.12 0 0 1-11.13 11.13z" fill="url(#pyYellow)"/>
+                    </svg>
+                    <span>Python</span>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Close container -->
+
+    <script>
+        const API_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/playlist';
+        
+        // Configuración de Spotify OAuth
+        const SPOTIFY_CLIENT_ID = 'b568dcea222848aab3697ec6ca4195b7';
+        const API_BASE = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com';
+        const REDIRECT_URI = API_BASE + '/callback';
+        const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private user-read-email';
+        
+        // Almacenamiento del token
+        let accessToken = null;
+        let userProfile = null;
+
+        function setPrompt(text) {
+            document.getElementById('prompt').value = text;
+        }
+
+        // Función para iniciar sesión con Spotify
+        function loginWithSpotify() {
+            const authUrl = `https://accounts.spotify.com/authorize?${new URLSearchParams({
+                client_id: SPOTIFY_CLIENT_ID,
+                response_type: 'code',
+                redirect_uri: REDIRECT_URI,
+                scope: SCOPES,
+                show_dialog: 'true'
+            })}`;
+            
+            window.location.href = authUrl;
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('spotify_access_token');
+            localStorage.removeItem('spotify_token_expiry');
+            localStorage.removeItem('spotify_user_profile');
+            accessToken = null;
+            userProfile = null;
+            updateAuthUI();
+        }
+
+        // Actualizar UI de autenticación
+        function updateAuthUI() {
+            const notConnected = document.getElementById('notConnected');
+            const connected = document.getElementById('connected');
+            const authSection = document.getElementById('authSection');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (accessToken) {
+                notConnected.classList.add('hidden');
+                connected.classList.remove('hidden');
+                authSection.classList.add('connected');
+                submitBtn.disabled = false;
+                
+                if (userProfile) {
+                    document.getElementById('userInfo').textContent = 
+                        `User: ${userProfile.display_name || userProfile.id}`;
+                }
+            } else {
+                notConnected.classList.remove('hidden');
+                connected.classList.add('hidden');
+                authSection.classList.remove('connected');
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Obtener perfil del usuario
+        async function getUserProfile(token) {
+            try {
+                const response = await fetch('https://api.spotify.com/v1/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.error('Error getting user profile:', error);
+            }
+            return null;
+        }
+
+        // Verificar si hay token guardado o en el hash
+        async function checkForToken() {
+            console.log('Checking for token...');
+            
+            // Primero verificar si hay token en el hash (callback de OAuth)
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            
+            if (params.has('access_token')) {
+                console.log('Token found in URL hash');
+                accessToken = params.get('access_token');
+                const expiresIn = parseInt(params.get('expires_in') || '3600');
+                const expiryTime = Date.now() + (expiresIn * 1000);
+                
+                // Guardar en localStorage
+                localStorage.setItem('spotify_access_token', accessToken);
+                localStorage.setItem('spotify_token_expiry', expiryTime.toString());
+                
+                // Obtener perfil del usuario
+                console.log('Fetching user profile...');
+                userProfile = await getUserProfile(accessToken);
+                if (userProfile) {
+                    localStorage.setItem('spotify_user_profile', JSON.stringify(userProfile));
+                    document.getElementById('userId').value = userProfile.id;
+                    console.log('Profile fetched:', userProfile.id);
+                }
+                
+                // Limpiar la URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                updateAuthUI();
+                return;
+            }
+            
+            // Si no hay token en el hash, verificar localStorage
+            const savedToken = localStorage.getItem('spotify_access_token');
+            const expiryTime = localStorage.getItem('spotify_token_expiry');
+            
+            console.log('Token in localStorage:', savedToken ? 'Yes' : 'No');
+            console.log('Expiry:', expiryTime);
+            
+            if (savedToken && expiryTime && Date.now() < parseInt(expiryTime)) {
+                console.log('Token is valid');
+                accessToken = savedToken;
+                const savedProfile = localStorage.getItem('spotify_user_profile');
+                if (savedProfile) {
+                    userProfile = JSON.parse(savedProfile);
+                    document.getElementById('userId').value = userProfile.id;
+                    console.log('Profile loaded from storage:', userProfile.id);
+                } else {
+                    // Obtener perfil si no está guardado
+                    console.log('Fetching user profile...');
+                    userProfile = await getUserProfile(accessToken);
+                    if (userProfile) {
+                        localStorage.setItem('spotify_user_profile', JSON.stringify(userProfile));
+                        document.getElementById('userId').value = userProfile.id;
+                        console.log('Profile fetched:', userProfile.id);
+                    }
+                }
+                updateAuthUI();
+            } else {
+                console.log('Token expired or not found');
+                // Token expirado o no existe, limpiar
+                localStorage.removeItem('spotify_access_token');
+                localStorage.removeItem('spotify_token_expiry');
+                localStorage.removeItem('spotify_user_profile');
+                updateAuthUI();
+            }
+        }
+
+        // Inicializar al cargar la página
+        window.addEventListener('load', checkForToken);
+
+        document.getElementById('playlistForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userId = document.getElementById('userId').value;
+            const prompt = document.getElementById('prompt').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+            
+            // Reset
+            result.style.display = 'none';
+            error.style.display = 'none';
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        prompt: prompt,
+                        spotify_access_token: accessToken
+                    })
+                });
+                
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (response.ok) {
+                    // Success
+                    const spotifyUrl = data.playlist_url;
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    
+                    // Convert web URL to app URL for mobile
+                    let finalUrl = spotifyUrl;
+                    if (isMobile && spotifyUrl) {
+                        // Extract playlist ID from URL
+                        const playlistId = spotifyUrl.split('/playlist/')[1]?.split('?')[0];
+                        if (playlistId) {
+                            finalUrl = `spotify:playlist:${playlistId}`;
+                        }
+                    }
+                    
+                    document.getElementById('resultContent').innerHTML = `
+                        <p><strong>Playlist:</strong> ${data.parameters.playlist_name}</p>
+                        <p><strong>Genres:</strong> ${data.parameters.genres?.join(', ') || 'Mixed'}</p>
+                        <p><strong>Mood:</strong> ${data.parameters.mood || 'N/A'}</p>
+                        <p><strong>Energy:</strong> ${(data.parameters.energy * 100).toFixed(0)}%</p>
+                        <p><strong>Danceability:</strong> ${(data.parameters.danceability * 100).toFixed(0)}%</p>
+                        <p><strong>Positivity:</strong> ${(data.parameters.valence * 100).toFixed(0)}%</p>
+                        <p><strong>Tracks:</strong> ${data.tracks_count}</p>
+                        ${spotifyUrl ? `<a href="${finalUrl}" target="_blank">🎵 Open in Spotify ${isMobile ? 'App' : ''}</a>` : ''}
+                    `;
+                    result.style.display = 'block';
+                } else {
+                    // Error
+                    document.getElementById('errorMessage').textContent = data.error || 'Unknown error';
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                document.getElementById('errorMessage').textContent = 'Connection error: ' + err.message;
+                error.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
