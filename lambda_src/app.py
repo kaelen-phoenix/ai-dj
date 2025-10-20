@@ -7,33 +7,33 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 
-# Configuración de clientes AWS
+# AWS Client Configuration
 dynamodb = boto3.resource('dynamodb')
 bedrock_runtime = boto3.client('bedrock-runtime', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
 
-# Variables de entorno
+# Environment Variables
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 DYNAMODB_TABLE_NAME = os.environ.get('DYNAMODB_TABLE_NAME')
 BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-sonnet-20240229-v1:0')
 
-# Tabla DynamoDB
+# DynamoDB Table
 table = dynamodb.Table(DYNAMODB_TABLE_NAME)
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Manejador principal de la función Lambda.
-    Recibe una petición con user_id y prompt, genera una playlist de Spotify.
+    Main handler for the Lambda function.
+    Receives a request with user_id and prompt, then generates a Spotify playlist.
     """
     try:
-        # Parsear el body de la petición
+        # Parse the request body
         body = json.loads(event.get('body', '{}'))
         user_id = body.get('user_id')
         prompt = body.get('prompt')
         spotify_access_token = body.get('spotify_access_token')
         
-        # Validar parámetros requeridos
+        # Validate required parameters
         if not user_id or not prompt:
             return create_response(400, {
                 'error': 'Missing required parameters: user_id and prompt are required'
@@ -46,11 +46,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         print(f"Processing request for user_id: {user_id}, prompt: {prompt}")
         
-        # Paso 1: Interpretar el prompt con Amazon Bedrock
+        # Step 1: Interpret the prompt with Amazon Bedrock
         music_parameters = interpret_prompt_with_bedrock(prompt)
         print(f"Extracted music parameters: {music_parameters}")
         
-        # Paso 2: Buscar canciones en Spotify
+        # Step 2: Search for tracks on Spotify
         tracks = search_spotify_tracks(music_parameters, spotify_access_token)
         
         if not tracks:
@@ -60,7 +60,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         print(f"Found {len(tracks)} tracks")
         
-        # Paso 3: Crear playlist en Spotify
+        # Step 3: Create a playlist on Spotify
         playlist_url = create_spotify_playlist(
             user_id=user_id,
             playlist_name=music_parameters.get('playlist_name', f"AI DJ - {prompt[:30]}"),
@@ -70,10 +70,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         print(f"Created playlist: {playlist_url}")
         
-        # Paso 4: Guardar en DynamoDB
+        # Step 4: Save to DynamoDB
         save_playlist_to_dynamodb(user_id, playlist_url, prompt, music_parameters)
         
-        # Respuesta exitosa
+        # Successful response
         return create_response(200, {
             'message': 'Playlist created successfully',
             'playlist_url': playlist_url,
@@ -90,26 +90,26 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def interpret_prompt_with_bedrock(prompt: str) -> Dict[str, Any]:
     """
-    Usa Amazon Bedrock para interpretar el prompt del usuario y extraer parámetros musicales.
+    Uses Amazon Bedrock to interpret the user's prompt and extract musical parameters.
     """
-    system_prompt = """Eres un experto en música que interpreta peticiones de usuarios para crear playlists.
-Analiza el prompt del usuario y extrae los siguientes parámetros en formato JSON:
+    system_prompt = """You are a music expert who interprets user requests to create playlists.
+Analyze the user's prompt and extract the following parameters in JSON format:
 
-- genres: lista de géneros musicales (ej: ["pop", "rock", "electronic"])
-- mood: el estado de ánimo (ej: "happy", "sad", "energetic", "chill", "party")
-- energy: nivel de energía de 0.0 a 1.0
-- danceability: qué tan bailable de 0.0 a 1.0
-- valence: positividad de 0.0 a 1.0 (0 = triste, 1 = feliz)
-- tempo: tempo aproximado en BPM (opcional)
-- popularity: popularidad mínima de 0 a 100
-- playlist_name: nombre sugerido para la playlist
-- limit: número de canciones (por defecto 20, máximo 50)
+- genres: list of musical genres (e.g., ["pop", "rock", "electronic"])
+- mood: the mood (e.g., "happy", "sad", "energetic", "chill", "party")
+- energy: energy level from 0.0 to 1.0
+- danceability: how danceable from 0.0 to 1.0
+- valence: positivity from 0.0 to 1.0 (0 = sad, 1 = happy)
+- tempo: approximate tempo in BPM (optional)
+- popularity: minimum popularity from 0 to 100
+- playlist_name: suggested name for the playlist
+- limit: number of songs (default 20, maximum 50)
 
-Responde SOLO con el JSON, sin texto adicional."""
+Respond ONLY with the JSON, without additional text."""
 
-    user_message = f"Crea una playlist basada en: {prompt}"
+    user_message = f"Create a playlist based on: {prompt}"
     
-    # Preparar el payload para Claude 3
+    # Prepare the payload for Claude 3
     payload = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 1000,
@@ -123,18 +123,18 @@ Responde SOLO con el JSON, sin texto adicional."""
     }
     
     try:
-        # Invocar Bedrock
+        # Invoke Bedrock
         response = bedrock_runtime.invoke_model(
             modelId=BEDROCK_MODEL_ID,
             body=json.dumps(payload)
         )
         
-        # Parsear respuesta
+        # Parse response
         response_body = json.loads(response['body'].read())
         content = response_body['content'][0]['text']
         
-        # Extraer JSON de la respuesta
-        # Claude puede devolver el JSON con o sin markdown
+        # Extract JSON from the response
+        # Claude might return the JSON with or without markdown
         if '```json' in content:
             content = content.split('```json')[1].split('```')[0].strip()
         elif '```' in content:
@@ -142,7 +142,7 @@ Responde SOLO con el JSON, sin texto adicional."""
         
         music_params = json.loads(content)
         
-        # Valores por defecto
+        # Default values
         defaults = {
             'genres': ['pop'],
             'mood': 'happy',
@@ -154,12 +154,12 @@ Responde SOLO con el JSON, sin texto adicional."""
             'limit': 20
         }
         
-        # Combinar con defaults
+        # Combine with defaults
         return {**defaults, **music_params}
         
     except Exception as e:
         print(f"Error calling Bedrock: {str(e)}")
-        # Fallback a parámetros por defecto
+        # Fallback to default parameters
         return {
             'genres': ['pop'],
             'mood': 'happy',
@@ -174,12 +174,12 @@ Responde SOLO con el JSON, sin texto adicional."""
 
 def get_spotify_client_token() -> Optional[str]:
     """
-    Obtiene un token de acceso de Spotify usando Client Credentials Flow.
-    Este token solo permite búsquedas, no crear playlists.
+    Gets a Spotify access token using the Client Credentials Flow.
+    This token only allows searches, not creating playlists.
     """
     auth_url = 'https://accounts.spotify.com/api/token'
     
-    # Codificar credenciales en Base64
+    # Encode credentials in Base64
     auth_str = f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}"
     auth_bytes = auth_str.encode('utf-8')
     auth_base64 = base64.b64encode(auth_bytes).decode('utf-8')
@@ -204,22 +204,22 @@ def get_spotify_client_token() -> Optional[str]:
 
 def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List[Dict[str, Any]]:
     """
-    Busca canciones en Spotify basándose en los parámetros musicales.
+    Searches for tracks on Spotify based on musical parameters.
     """
-    # Usar el token del usuario para búsquedas
+    # Use the user's token for searches
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
     
-    # Construir query de búsqueda
+    # Build search query
     genres = parameters.get('genres', ['pop'])
-    genre_query = ' OR '.join([f'genre:"{g}"' for g in genres[:2]])  # Máximo 2 géneros
+    genre_query = ' OR '.join([f'genre:"{g}"' for g in genres[:2]])  # Maximum of 2 genres
     
     search_url = 'https://api.spotify.com/v1/search'
     search_params = {
         'q': genre_query,
         'type': 'track',
-        'limit': 50,  # Buscar más para luego filtrar
+        'limit': 50,  # Search for more to filter later
         'market': 'US'
     }
     
@@ -228,23 +228,23 @@ def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List
         response.raise_for_status()
         tracks_data = response.json()
         
-        # Obtener IDs de las canciones
+        # Get track IDs
         track_ids = [track['id'] for track in tracks_data['tracks']['items']]
         
         if not track_ids:
             return []
         
-        # Obtener audio features para filtrar
+        # Get audio features to filter
         features_url = 'https://api.spotify.com/v1/audio-features'
         features_params = {
-            'ids': ','.join(track_ids[:50])  # Máximo 50 IDs
+            'ids': ','.join(track_ids[:50])  # Maximum of 50 IDs
         }
         
         features_response = requests.get(features_url, headers=headers, params=features_params, timeout=10)
         features_response.raise_for_status()
         audio_features = features_response.json()['audio_features']
         
-        # Filtrar canciones basándose en parámetros
+        # Filter tracks based on parameters
         filtered_tracks = []
         target_energy = parameters.get('energy', 0.5)
         target_danceability = parameters.get('danceability', 0.5)
@@ -256,14 +256,14 @@ def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List
             if features is None:
                 continue
             
-            # Calcular score de similitud
+            # Calculate similarity score
             energy_diff = abs(features['energy'] - target_energy)
             dance_diff = abs(features['danceability'] - target_danceability)
             valence_diff = abs(features['valence'] - target_valence)
             
             score = 1 - (energy_diff + dance_diff + valence_diff) / 3
             
-            # Filtrar por popularidad
+            # Filter by popularity
             if track['popularity'] >= min_popularity:
                 filtered_tracks.append({
                     'uri': track['uri'],
@@ -272,7 +272,7 @@ def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List
                     'score': score
                 })
         
-        # Ordenar por score y tomar los mejores
+        # Sort by score and take the best ones
         filtered_tracks.sort(key=lambda x: x['score'], reverse=True)
         return filtered_tracks[:limit]
         
@@ -288,8 +288,8 @@ def create_spotify_playlist(
     access_token: str
 ) -> str:
     """
-    Crea una nueva playlist en Spotify y añade las canciones.
-    Requiere el access token del usuario (con scope playlist-modify-public o playlist-modify-private).
+    Creates a new playlist on Spotify and adds the tracks.
+    Requires the user's access token (with playlist-modify-public or playlist-modify-private scope).
     """
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -297,13 +297,13 @@ def create_spotify_playlist(
     }
     
     try:
-        # Obtener el Spotify user ID del token
+        # Get the Spotify user ID from the token
         profile_url = 'https://api.spotify.com/v1/me'
         profile_response = requests.get(profile_url, headers=headers, timeout=10)
         profile_response.raise_for_status()
         spotify_user_id = profile_response.json()['id']
         
-        # Crear playlist
+        # Create playlist
         create_url = f'https://api.spotify.com/v1/users/{spotify_user_id}/playlists'
         create_data = {
             'name': playlist_name,
@@ -316,7 +316,7 @@ def create_spotify_playlist(
         playlist_id = create_response.json()['id']
         playlist_url = create_response.json()['external_urls']['spotify']
         
-        # Añadir canciones a la playlist
+        # Add tracks to the playlist
         if track_uris:
             add_tracks_url = f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks'
             add_tracks_data = {
@@ -340,22 +340,22 @@ def save_playlist_to_dynamodb(
     parameters: Dict[str, Any]
 ) -> None:
     """
-    Guarda la información de la playlist en DynamoDB.
+    Saves the playlist information to DynamoDB.
     """
     try:
         timestamp = datetime.utcnow().isoformat()
         
-        # Obtener playlists existentes del usuario
+        # Get existing playlists for the user
         response = table.get_item(Key={'user_id': user_id})
         
         if 'Item' in response:
-            # Usuario existe, añadir nueva playlist
+            # User exists, add new playlist
             playlists = response['Item'].get('playlists', [])
         else:
-            # Nuevo usuario
+            # New user
             playlists = []
         
-        # Añadir nueva playlist
+        # Add new playlist
         playlists.append({
             'playlist_url': playlist_url,
             'prompt': prompt,
@@ -363,7 +363,7 @@ def save_playlist_to_dynamodb(
             'created_at': timestamp
         })
         
-        # Guardar en DynamoDB
+        # Save to DynamoDB
         table.put_item(
             Item={
                 'user_id': user_id,
@@ -376,12 +376,12 @@ def save_playlist_to_dynamodb(
         
     except Exception as e:
         print(f"Error saving to DynamoDB: {str(e)}")
-        # No lanzar excepción, la playlist ya fue creada
+        # Do not raise exception, the playlist has already been created
 
 
 def create_response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Crea una respuesta HTTP formateada para API Gateway.
+    Creates a formatted HTTP response for API Gateway.
     """
     return {
         'statusCode': status_code,

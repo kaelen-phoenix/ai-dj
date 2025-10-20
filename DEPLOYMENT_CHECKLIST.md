@@ -1,349 +1,349 @@
-# ✅ Checklist de Despliegue - AI DJ
+# ✅ Deployment Checklist - AI DJ
 
-Usa esta lista para asegurarte de que todo está configurado correctamente antes del despliegue.
+Use this list to ensure everything is configured correctly before deployment.
 
-## Pre-Despliegue
+## Pre-Deployment
 
-### Software Instalado
+### Installed Software
 
-- [ ] Python 3.12+ instalado
+- [ ] Python 3.12+ installed
   ```powershell
   python --version
   ```
 
-- [ ] Node.js 20+ instalado
+- [ ] Node.js 20+ installed
   ```powershell
   node --version
   ```
 
-- [ ] AWS CLI instalado y configurado
+- [ ] AWS CLI installed and configured
   ```powershell
   aws --version
   aws sts get-caller-identity
   ```
 
-- [ ] AWS CDK instalado
+- [ ] AWS CDK installed
   ```powershell
   cdk --version
   ```
 
-- [ ] Git instalado
+- [ ] Git installed
   ```powershell
   git --version
   ```
 
-### Cuentas y Credenciales
+### Accounts and Credentials
 
-- [ ] Cuenta de AWS activa
-- [ ] AWS Access Key ID y Secret Access Key creados
-- [ ] AWS CLI configurado con credenciales
+- [ ] Active AWS account
+- [ ] AWS Access Key ID and Secret Access Key created
+- [ ] AWS CLI configured with credentials
   ```powershell
   aws configure list
   ```
 
-- [ ] Amazon Bedrock habilitado en us-east-1
-- [ ] Acceso a Claude 3 Sonnet aprobado en Bedrock
-  - Verificar en: https://console.aws.amazon.com/bedrock/ → Model access
+- [ ] Amazon Bedrock enabled in us-east-1
+- [ ] Access to Claude 3 Sonnet approved in Bedrock
+  - Verify at: https://console.aws.amazon.com/bedrock/ → Model access
 
-- [ ] Spotify Developer App creada
-- [ ] Spotify Client ID obtenido
-- [ ] Spotify Client Secret obtenido
-- [ ] Redirect URIs configurados en Spotify
+- [ ] Spotify Developer App created
+- [ ] Spotify Client ID obtained
+- [ ] Spotify Client Secret obtained
+- [ ] Redirect URIs configured in Spotify
 
-- [ ] Repositorio de GitHub creado
-- [ ] Acceso de escritura al repositorio
+- [ ] GitHub repository created
+- [ ] Write access to the repository
 
-### Configuración Local
+### Local Configuration
 
-- [ ] Proyecto clonado/descargado
-- [ ] Entorno virtual de Python creado
+- [ ] Project cloned/downloaded
+- [ ] Python virtual environment created
   ```powershell
   python -m venv .venv
   ```
 
-- [ ] Entorno virtual activado
+- [ ] Virtual environment activated
   ```powershell
   .\.venv\Scripts\Activate.ps1
   ```
 
-- [ ] Dependencias CDK instaladas
+- [ ] CDK dependencies installed
   ```powershell
   pip install -r requirements.txt
   ```
 
-- [ ] Dependencias Lambda instaladas
+- [ ] Lambda dependencies installed
   ```powershell
   cd lambda_src
   pip install -r requirements.txt
   cd ..
   ```
 
-## Despliegue Local (Opcional)
+## Local Deployment (Optional)
 
-- [ ] Variables de entorno configuradas
+- [ ] Environment variables configured
   ```powershell
-  $env:SPOTIFY_CLIENT_ID = "tu_client_id"
-  $env:SPOTIFY_CLIENT_SECRET = "tu_client_secret"
+  $env:SPOTIFY_CLIENT_ID = "your_client_id"
+  $env:SPOTIFY_CLIENT_SECRET = "your_client_secret"
   ```
 
-- [ ] CDK Bootstrap ejecutado (solo primera vez)
+- [ ] CDK Bootstrap executed (first time only)
   ```powershell
   cdk bootstrap
   ```
 
-- [ ] CDK Synth ejecutado sin errores
+- [ ] CDK Synth executed without errors
   ```powershell
   cdk synth
   ```
 
-- [ ] CDK Deploy ejecutado exitosamente
+- [ ] CDK Deploy executed successfully
   ```powershell
   cdk deploy
   ```
 
-- [ ] API Endpoint obtenido del output
-- [ ] Lambda Function verificada en AWS Console
-- [ ] DynamoDB Table verificada en AWS Console
-- [ ] API Gateway verificado en AWS Console
+- [ ] API Endpoint obtained from output
+- [ ] Lambda Function verified in AWS Console
+- [ ] DynamoDB Table verified in AWS Console
+- [ ] API Gateway verified in AWS Console
 
-## Configuración de GitHub
+## GitHub Configuration
 
-### Repositorio
+### Repository
 
-- [ ] Código subido a GitHub
+- [ ] Code pushed to GitHub
   ```powershell
   git init
   git add .
   git commit -m "Initial commit"
   git branch -M main
-  git remote add origin https://github.com/TU_USUARIO/ai-dj.git
+  git remote add origin https://github.com/YOUR_USER/ai-dj.git
   git push -u origin main
   ```
 
-### Secretos de GitHub Actions
+### GitHub Actions Secrets
 
-Ir a: Settings → Secrets and variables → Actions → New repository secret
+Go to: Settings → Secrets and variables → Actions → New repository secret
 
-- [ ] `AWS_ACCESS_KEY_ID` configurado
-- [ ] `AWS_SECRET_ACCESS_KEY` configurado
-- [ ] `AWS_ACCOUNT_ID` configurado (12 dígitos)
-- [ ] `SPOTIFY_CLIENT_ID` configurado
-- [ ] `SPOTIFY_CLIENT_SECRET` configurado
+- [ ] `AWS_ACCESS_KEY_ID` configured
+- [ ] `AWS_SECRET_ACCESS_KEY` configured
+- [ ] `AWS_ACCOUNT_ID` configured (12 digits)
+- [ ] `SPOTIFY_CLIENT_ID` configured
+- [ ] `SPOTIFY_CLIENT_SECRET` configured
 
-### Verificación de Secretos
+### Secret Verification
 
-- [ ] 5 secretos listados en GitHub
-- [ ] Nombres de secretos sin errores tipográficos
-- [ ] Valores copiados correctamente (sin espacios extra)
+- [ ] 5 secrets listed in GitHub
+- [ ] Secret names without typos
+- [ ] Values copied correctly (no extra spaces)
 
-## Primer Despliegue Automático
+## First Automatic Deployment
 
-- [ ] Push a rama main realizado
+- [ ] Push to main branch performed
   ```powershell
   git push origin main
   ```
 
-- [ ] Workflow de GitHub Actions iniciado
-  - Verificar en: Repositorio → Actions
+- [ ] GitHub Actions workflow started
+  - Verify at: Repository → Actions
 
-- [ ] Workflow completado exitosamente (✓ verde)
-- [ ] Todos los pasos del workflow pasaron
-- [ ] API Endpoint visible en los outputs del workflow
+- [ ] Workflow completed successfully (✓ green)
+- [ ] All workflow steps passed
+- [ ] API Endpoint visible in workflow outputs
 
-## Verificación Post-Despliegue
+## Post-Deployment Verification
 
-### Recursos AWS
+### AWS Resources
 
-- [ ] Lambda Function existe
+- [ ] Lambda Function exists
   ```powershell
   aws lambda get-function --function-name AI-DJ-Handler
   ```
 
-- [ ] DynamoDB Table existe
+- [ ] DynamoDB Table exists
   ```powershell
   aws dynamodb describe-table --table-name AI-DJ-Users
   ```
 
-- [ ] API Gateway existe
+- [ ] API Gateway exists
   ```powershell
   aws apigatewayv2 get-apis
   ```
 
-- [ ] CloudWatch Log Group existe
+- [ ] CloudWatch Log Group exists
   ```powershell
   aws logs describe-log-groups --log-group-name-prefix /aws/lambda/AI-DJ-Handler
   ```
 
-### Permisos IAM
+### IAM Permissions
 
-- [ ] Lambda tiene permisos para DynamoDB
-- [ ] Lambda tiene permisos para Bedrock
-- [ ] Lambda tiene permisos para CloudWatch Logs
+- [ ] Lambda has permissions for DynamoDB
+- [ ] Lambda has permissions for Bedrock
+- [ ] Lambda has permissions for CloudWatch Logs
 
-Verificar en: AWS Console → Lambda → AI-DJ-Handler → Configuration → Permissions
+Verify at: AWS Console → Lambda → AI-DJ-Handler → Configuration → Permissions
 
-### Prueba de API
+### API Test
 
-- [ ] API Endpoint responde (aunque sea con error de auth)
+- [ ] API Endpoint responds (even with an auth error)
   ```powershell
-  curl -X POST "https://tu-endpoint/playlist" -H "Content-Type: application/json" -d '{}'
+  curl -X POST "https://your-endpoint/playlist" -H "Content-Type: application/json" -d '{}'
   ```
 
-- [ ] Respuesta recibida (200, 400, o 500)
-- [ ] Headers CORS presentes en respuesta
+- [ ] Response received (200, 400, or 500)
+- [ ] CORS headers present in response
 
-### Logs y Monitoreo
+### Logs and Monitoring
 
-- [ ] Logs de Lambda visibles en CloudWatch
+- [ ] Lambda logs visible in CloudWatch
   ```powershell
   aws logs tail /aws/lambda/AI-DJ-Handler --since 1h
   ```
 
-- [ ] No hay errores críticos en logs
-- [ ] Métricas de Lambda visibles en CloudWatch
+- [ ] No critical errors in logs
+- [ ] Lambda metrics visible in CloudWatch
 
-## Prueba End-to-End (Requiere Spotify Token)
+## End-to-End Test (Requires Spotify Token)
 
-- [ ] Spotify Access Token obtenido (ver SPOTIFY_AUTH_GUIDE.md)
-- [ ] Petición POST a /playlist exitosa
-- [ ] Playlist creada en Spotify
-- [ ] Playlist URL devuelta en respuesta
-- [ ] Registro guardado en DynamoDB
+- [ ] Spotify Access Token obtained (see SPOTIFY_AUTH_GUIDE.md)
+- [ ] POST request to /playlist successful
+- [ ] Playlist created on Spotify
+- [ ] Playlist URL returned in response
+- [ ] Record saved in DynamoDB
   ```powershell
   aws dynamodb get-item --table-name AI-DJ-Users --key '{"user_id":{"S":"test_user"}}'
   ```
 
-## Configuración de Producción (Opcional)
+## Production Configuration (Optional)
 
-### Seguridad
+### Security
 
-- [ ] API Gateway con autenticación configurada (API Key, Cognito, etc.)
-- [ ] Rate limiting configurado
-- [ ] WAF configurado (si es necesario)
-- [ ] Secrets Manager para credenciales sensibles
+- [ ] API Gateway with authentication configured (API Key, Cognito, etc.)
+- [ ] Rate limiting configured
+- [ ] WAF configured (if necessary)
+- [ ] Secrets Manager for sensitive credentials
 
-### Monitoreo
+### Monitoring
 
-- [ ] CloudWatch Alarms configuradas
+- [ ] CloudWatch Alarms configured
   - Lambda Errors > 5%
   - API Gateway 5XX > 1%
   - Lambda Duration > 50s
   - DynamoDB Throttled Requests > 0
 
-- [ ] SNS Topic para notificaciones
-- [ ] Email/SMS configurado para alarmas
+- [ ] SNS Topic for notifications
+- [ ] Email/SMS configured for alarms
 
-### Optimización
+### Optimization
 
-- [ ] Lambda memory size ajustado según uso
-- [ ] Lambda timeout ajustado según necesidad
-- [ ] DynamoDB capacity mode revisado (on-demand vs provisioned)
-- [ ] API Gateway caching habilitado (si aplica)
+- [ ] Lambda memory size adjusted based on usage
+- [ ] Lambda timeout adjusted as needed
+- [ ] DynamoDB capacity mode reviewed (on-demand vs provisioned)
+- [ ] API Gateway caching enabled (if applicable)
 
-### Backup y Recuperación
+### Backup and Recovery
 
-- [ ] DynamoDB Point-in-time Recovery habilitado
-- [ ] Backups automáticos configurados
-- [ ] Plan de recuperación ante desastres documentado
+- [ ] DynamoDB Point-in-time Recovery enabled
+- [ ] Automatic backups configured
+- [ ] Disaster recovery plan documented
 
-## Documentación
+## Documentation
 
-- [ ] README.md actualizado con endpoint real
-- [ ] API_DOCUMENTATION.md revisado
-- [ ] ARCHITECTURE.md actualizado si hubo cambios
-- [ ] Ejemplos de uso documentados
-- [ ] Troubleshooting guide actualizado
+- [ ] README.md updated with actual endpoint
+- [ ] API_DOCUMENTATION.md reviewed
+- [ ] ARCHITECTURE.md updated if changes were made
+- [ ] Usage examples documented
+- [ ] Troubleshooting guide updated
 
-## Comunicación
+## Communication
 
-- [ ] Equipo notificado del despliegue
-- [ ] Documentación compartida
-- [ ] Credenciales de acceso distribuidas (si aplica)
-- [ ] Calendario de mantenimiento comunicado
+- [ ] Team notified of deployment
+- [ ] Documentation shared
+- [ ] Access credentials distributed (if applicable)
+- [ ] Maintenance schedule communicated
 
 ## Rollback Plan
 
-- [ ] Procedimiento de rollback documentado
+- [ ] Rollback procedure documented
   ```powershell
-  # Opción 1: Revertir commit y re-desplegar
+  # Option 1: Revert commit and re-deploy
   git revert HEAD
   git push
   
-  # Opción 2: Destruir y re-desplegar versión anterior
+  # Option 2: Destroy and re-deploy previous version
   cdk destroy
-  git checkout <commit_anterior>
+  git checkout <previous_commit>
   cdk deploy
   ```
 
-- [ ] Backup de configuración anterior guardado
-- [ ] Contactos de emergencia identificados
+- [ ] Backup of previous configuration saved
+- [ ] Emergency contacts identified
 
-## Checklist de Mantenimiento Continuo
+## Continuous Maintenance Checklist
 
-### Semanal
+### Weekly
 
-- [ ] Revisar logs de errores en CloudWatch
-- [ ] Verificar métricas de uso
-- [ ] Revisar costos en AWS Cost Explorer
+- [ ] Review error logs in CloudWatch
+- [ ] Check usage metrics
+- [ ] Review costs in AWS Cost Explorer
 
-### Mensual
+### Monthly
 
-- [ ] Actualizar dependencias de Python
+- [ ] Update Python dependencies
   ```powershell
   pip list --outdated
   ```
 
-- [ ] Actualizar AWS CDK
+- [ ] Update AWS CDK
   ```powershell
   npm update -g aws-cdk
   ```
 
-- [ ] Revisar y optimizar costos
-- [ ] Revisar políticas de IAM (principio de menor privilegio)
+- [ ] Review and optimize costs
+- [ ] Review IAM policies (principle of least privilege)
 
-### Trimestral
+### Quarterly
 
-- [ ] Revisar arquitectura y escalabilidad
-- [ ] Actualizar documentación
-- [ ] Realizar pruebas de carga
-- [ ] Revisar plan de recuperación ante desastres
+- [ ] Review architecture and scalability
+- [ ] Update documentation
+- [ ] Perform load tests
+- [ ] Review disaster recovery plan
 
-## Notas
+## Notes
 
-**Fecha de despliegue**: _______________
+**Deployment Date**: _______________
 
-**Desplegado por**: _______________
+**Deployed by**: _______________
 
-**Versión desplegada**: _______________
+**Deployed Version**: _______________
 
 **API Endpoint**: _______________
 
-**Región AWS**: _______________
+**AWS Region**: _______________
 
-**Observaciones**:
+**Observations**:
 _______________________________________________
 _______________________________________________
 _______________________________________________
 
-## Problemas Encontrados
+## Issues Found
 
-| Problema | Solución | Fecha |
+| Issue | Solution | Date |
 |----------|----------|-------|
 |          |          |       |
 |          |          |       |
 |          |          |       |
 
-## Contactos de Soporte
+## Support Contacts
 
 - **AWS Support**: https://console.aws.amazon.com/support/
 - **GitHub Support**: https://support.github.com/
 - **Spotify Developer**: https://developer.spotify.com/support/
-- **Equipo interno**: _______________
+- **Internal Team**: _______________
 
 ---
 
-**Estado del Despliegue**: ⬜ Pendiente | ⬜ En Progreso | ⬜ Completado | ⬜ Fallido
+**Deployment Status**: ⬜ Pending | ⬜ In Progress | ⬜ Completed | ⬜ Failed
 
-**Aprobado por**: _______________
+**Approved by**: _______________
 
-**Firma**: _______________
+**Signature**: _______________

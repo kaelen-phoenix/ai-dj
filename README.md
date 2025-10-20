@@ -1,36 +1,36 @@
-# 🎵 AI DJ - Generador Inteligente de Playlists de Spotify
+# 🎵 AI DJ - Intelligent Spotify Playlist Generator
 
-AI DJ es una aplicación serverless que utiliza inteligencia artificial para crear playlists personalizadas de Spotify basadas en peticiones en lenguaje natural. Interpreta el "vibe" que buscas y genera automáticamente una playlist perfecta para ti.
+AI DJ is a serverless application that uses artificial intelligence to create custom Spotify playlists based on natural language requests. It interprets the "vibe" you're looking for and automatically generates the perfect playlist for you.
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
-- **AWS Lambda**: Procesa las peticiones y orquesta la lógica
-- **Amazon Bedrock**: Interpreta el lenguaje natural usando Claude 3 Sonnet
-- **Amazon DynamoDB**: Almacena el historial de playlists por usuario
-- **Amazon API Gateway**: Expone la API REST
-- **Spotify Web API**: Busca canciones y crea playlists
-- **AWS CDK**: Infraestructura como código en Python
-- **GitHub Actions**: CI/CD automático
+- **AWS Lambda**: Processes requests and orchestrates the logic
+- **Amazon Bedrock**: Interprets natural language using Claude 3 Sonnet
+- **Amazon DynamoDB**: Stores user playlist history
+- **Amazon API Gateway**: Exposes the REST API
+- **Spotify Web API**: Searches for songs and creates playlists
+- **AWS CDK**: Infrastructure as Code in Python
+- **GitHub Actions**: Automatic CI/CD
 
-## 📋 Requisitos Previos
+## 📋 Prerequisites
 
-### Software Necesario (Windows)
+### Required Software (Windows)
 
 1. **Python 3.12+**
-   - Descargar desde: https://www.python.org/downloads/
-   - Durante la instalación, marcar "Add Python to PATH"
+   - Download from: https://www.python.org/downloads/
+   - During installation, check "Add Python to PATH"
 
 2. **Node.js 20+**
-   - Descargar desde: https://nodejs.org/
-   - Incluye npm automáticamente
+   - Download from: https://nodejs.org/
+   - Includes npm automatically
 
 3. **AWS CLI v2**
-   - Descargar desde: https://aws.amazon.com/cli/
-   - Verificar instalación: `aws --version`
+   - Download from: https://aws.amazon.com/cli/
+   - Verify installation: `aws --version`
 
 4. **Git**
-   - Descargar desde: https://git-scm.com/download/win
-   - Verificar instalación: `git --version`
+   - Download from: https://git-scm.com/download/win
+   - Verify installation: `git --version`
 
 5. **AWS CDK**
    ```powershell
@@ -38,181 +38,181 @@ AI DJ es una aplicación serverless que utiliza inteligencia artificial para cre
    cdk --version
    ```
 
-### Cuentas Necesarias
+### Required Accounts
 
-1. **Cuenta de AWS**
-   - Crear en: https://aws.amazon.com/
-   - Necesitarás acceso a: Lambda, DynamoDB, API Gateway, Bedrock
+1. **AWS Account**
+   - Create at: https://aws.amazon.com/
+   - You will need access to: Lambda, DynamoDB, API Gateway, Bedrock
 
-2. **Cuenta de Spotify Developer**
-   - Crear en: https://developer.spotify.com/dashboard
-   - Crear una aplicación para obtener Client ID y Client Secret
+2. **Spotify Developer Account**
+   - Create at: https://developer.spotify.com/dashboard
+   - Create an application to get a Client ID and Client Secret
 
-3. **Cuenta de GitHub**
-   - Para alojar el código y ejecutar CI/CD
+3. **GitHub Account**
+   - To host the code and run CI/CD
 
-## 🚀 Configuración del Entorno Local
+## 🚀 Local Environment Setup
 
-### 1. Clonar o Inicializar el Repositorio
+### 1. Clone or Initialize the Repository
 
 ```powershell
-# Si ya tienes el código
-cd c:\desarrollo\workspaces\hackaton\ai-dj
+# If you already have the code
+cd c:\dev\workspaces\hackaton\ai-dj
 
-# Si empiezas desde cero
+# If starting from scratch
 git init
-git remote add origin https://github.com/TU_USUARIO/ai-dj.git
+git remote add origin https://github.com/YOUR_USER/ai-dj.git
 ```
 
-### 2. Crear Entorno Virtual de Python
+### 2. Create Python Virtual Environment
 
 ```powershell
-# Crear entorno virtual
+# Create virtual environment
 python -m venv .venv
 
-# Activar entorno virtual (Windows PowerShell)
+# Activate virtual environment (Windows PowerShell)
 .\.venv\Scripts\Activate.ps1
 
-# Si tienes error de permisos, ejecuta primero:
+# If you get a permissions error, run this first:
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### 3. Instalar Dependencias
+### 3. Install Dependencies
 
 ```powershell
-# Dependencias del proyecto CDK
+# CDK project dependencies
 pip install -r requirements.txt
 
-# Dependencias de Lambda (para testing local)
+# Lambda dependencies (for local testing)
 cd lambda_src
 pip install -r requirements.txt
 cd ..
 ```
 
-### 4. Configurar AWS CLI
+### 4. Configure AWS CLI
 
 ```powershell
 aws configure
 ```
 
-Proporciona:
-- **AWS Access Key ID**: Tu clave de acceso
-- **AWS Secret Access Key**: Tu clave secreta
-- **Default region name**: `us-east-1` (o tu región preferida)
+Provide:
+- **AWS Access Key ID**: Your access key
+- **AWS Secret Access Key**: Your secret key
+- **Default region name**: `us-east-1` (or your preferred region)
 - **Default output format**: `json`
 
-### 5. Habilitar Amazon Bedrock
+### 5. Enable Amazon Bedrock
 
-1. Ve a la consola de AWS Bedrock: https://console.aws.amazon.com/bedrock/
-2. Navega a "Model access" en el menú lateral
-3. Solicita acceso al modelo **Anthropic Claude 3 Sonnet**
-4. Espera la aprobación (usualmente instantánea)
+1. Go to the AWS Bedrock console: https://console.aws.amazon.com/bedrock/
+2. Navigate to "Model access" in the side menu
+3. Request access to the **Anthropic Claude 3 Sonnet** model
+4. Wait for approval (usually instant)
 
-### 6. Configurar Spotify Developer App
+### 6. Configure Spotify Developer App
 
-1. Ve a: https://developer.spotify.com/dashboard
-2. Crea una nueva aplicación
-3. Anota el **Client ID** y **Client Secret**
-4. En "Edit Settings", añade Redirect URIs (para autenticación de usuarios):
-   - `http://localhost:8888/callback` (para desarrollo)
-   - Tu URL de producción cuando la tengas
+1. Go to: https://developer.spotify.com/dashboard
+2. Create a new application
+3. Note the **Client ID** and **Client Secret**
+4. In "Edit Settings", add Redirect URIs (for user authentication):
+   - `http://localhost:8888/callback` (for development)
+   - Your production URL when you have it
 
-## 🔐 Configurar Secretos en GitHub
+## 🔐 Configure Secrets in GitHub
 
-Para que el CI/CD funcione, necesitas configurar los siguientes secretos en tu repositorio de GitHub:
+For CI/CD to work, you need to configure the following secrets in your GitHub repository:
 
-1. Ve a tu repositorio en GitHub
-2. Navega a: **Settings** → **Secrets and variables** → **Actions**
-3. Haz clic en **New repository secret** y añade:
+1. Go to your repository on GitHub
+2. Navigate to: **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret** and add:
 
-| Nombre del Secreto | Descripción | Dónde Obtenerlo |
+| Secret Name | Description | Where to Get It |
 |-------------------|-------------|-----------------|
-| `AWS_ACCESS_KEY_ID` | ID de clave de acceso de AWS | AWS IAM Console |
-| `AWS_SECRET_ACCESS_KEY` | Clave de acceso secreta de AWS | AWS IAM Console |
-| `AWS_ACCOUNT_ID` | ID de tu cuenta AWS (12 dígitos) | AWS Console (esquina superior derecha) |
-| `SPOTIFY_CLIENT_ID` | Client ID de Spotify | Spotify Developer Dashboard |
-| `SPOTIFY_CLIENT_SECRET` | Client Secret de Spotify | Spotify Developer Dashboard |
+| `AWS_ACCESS_KEY_ID` | AWS Access Key ID | AWS IAM Console |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Access Key | AWS IAM Console |
+| `AWS_ACCOUNT_ID` | Your 12-digit AWS Account ID | AWS Console (top right corner) |
+| `SPOTIFY_CLIENT_ID` | Spotify Client ID | Spotify Developer Dashboard |
+| `SPOTIFY_CLIENT_SECRET` | Spotify Client Secret | Spotify Developer Dashboard |
 
-### Crear Usuario IAM para GitHub Actions
+### Create IAM User for GitHub Actions
 
 ```powershell
-# Crear usuario con permisos necesarios
+# Create user with necessary permissions
 aws iam create-user --user-name github-actions-ai-dj
 
-# Adjuntar políticas necesarias
+# Attach necessary policies
 aws iam attach-user-policy --user-name github-actions-ai-dj --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
 
-# Crear access key
+# Create access key
 aws iam create-access-key --user-name github-actions-ai-dj
 ```
 
-**Nota**: En producción, usa permisos más restrictivos en lugar de `AdministratorAccess`.
+**Note**: In production, use more restrictive permissions instead of `AdministratorAccess`.
 
-## 🧪 Despliegue Local (Opcional)
+## 🧪 Local Deployment (Optional)
 
-Para probar el despliegue desde tu máquina local:
+To test deployment from your local machine:
 
 ```powershell
-# Activar entorno virtual
+# Activate virtual environment
 .\.venv\Scripts\Activate.ps1
 
-# Configurar variables de entorno
-$env:SPOTIFY_CLIENT_ID = "tu_client_id"
-$env:SPOTIFY_CLIENT_SECRET = "tu_client_secret"
+# Configure environment variables
+$env:SPOTIFY_CLIENT_ID = "your_client_id"
+$env:SPOTIFY_CLIENT_SECRET = "your_client_secret"
 
-# Bootstrap de CDK (solo primera vez)
+# CDK Bootstrap (first time only)
 cdk bootstrap
 
-# Sintetizar el stack (verificar que no hay errores)
+# Synthesize the stack (check for errors)
 cdk synth
 
-# Desplegar
+# Deploy
 cdk deploy
 
-# Ver los outputs (API endpoint, etc.)
+# View outputs (API endpoint, etc.)
 cdk deploy --outputs-file outputs.json
 ```
 
-## 🚢 Despliegue Automático con GitHub Actions
+## 🚢 Automatic Deployment with GitHub Actions
 
-### Primera Vez
+### First Time
 
-1. **Asegúrate de tener todos los secretos configurados** (ver sección anterior)
+1. **Make sure you have all secrets configured** (see previous section)
 
-2. **Haz commit de tu código**:
+2. **Commit your code**:
    ```powershell
    git add .
    git commit -m "Initial commit: AI DJ serverless app"
    ```
 
-3. **Sube a la rama main**:
+3. **Push to the main branch**:
    ```powershell
    git push origin main
    ```
 
-4. **Monitorea el despliegue**:
-   - Ve a tu repositorio en GitHub
-   - Navega a la pestaña **Actions**
-   - Verás el workflow "Deploy AI DJ to AWS" ejecutándose
-   - Haz clic en el workflow para ver los logs en tiempo real
+4. **Monitor the deployment**:
+   - Go to your repository on GitHub
+   - Navigate to the **Actions** tab
+   - You will see the "Deploy AI DJ to AWS" workflow running
+   - Click on the workflow to see the real-time logs
 
-### Despliegues Posteriores
+### Subsequent Deployments
 
-Cada vez que hagas `git push` a la rama `main`, se desplegará automáticamente:
+Every time you `git push` to the `main` branch, it will be deployed automatically:
 
 ```powershell
-# Hacer cambios en el código
+# Make changes to the code
 # ...
 
-# Commit y push
+# Commit and push
 git add .
-git commit -m "Descripción de tus cambios"
+git commit -m "Description of your changes"
 git push origin main
 ```
 
-## 📡 Uso de la API
+## 📡 API Usage
 
-Una vez desplegada, obtendrás un endpoint de API Gateway. Ejemplo:
+Once deployed, you will get an API Gateway endpoint. Example:
 
 ```
 https://abc123xyz.execute-api.us-east-1.amazonaws.com/
@@ -223,9 +223,9 @@ https://abc123xyz.execute-api.us-east-1.amazonaws.com/
 **Request**:
 ```json
 {
-  "user_id": "usuario123",
-  "prompt": "Música energética para hacer ejercicio, algo de rock y electrónica",
-  "spotify_access_token": "BQD...token_del_usuario"
+  "user_id": "user123",
+  "prompt": "Energetic music for working out, some rock and electronic",
+  "spotify_access_token": "BQD...user_token"
 }
 ```
 
@@ -246,39 +246,39 @@ https://abc123xyz.execute-api.us-east-1.amazonaws.com/
 }
 ```
 
-### Obtener Access Token de Spotify
+### Get Spotify Access Token
 
-Los usuarios deben autenticarse con Spotify usando OAuth 2.0. Ejemplo básico:
+Users must authenticate with Spotify using OAuth 2.0. Basic example:
 
 1. **Authorization Code Flow**: https://developer.spotify.com/documentation/web-api/tutorials/code-flow
-2. **Scopes necesarios**: `playlist-modify-public`, `playlist-modify-private`
+2. **Required scopes**: `playlist-modify-public`, `playlist-modify-private`
 
-## 🧹 Limpieza de Recursos
+## 🧹 Resource Cleanup
 
-Para eliminar todos los recursos de AWS y evitar cargos:
+To delete all AWS resources and avoid charges:
 
 ```powershell
-# Desde tu máquina local
+# From your local machine
 cdk destroy
 
-# Confirma con 'y' cuando se te pregunte
+# Confirm with 'y' when prompted
 ```
 
-O desde GitHub Actions, puedes crear un workflow manual de destrucción.
+Or from GitHub Actions, you can create a manual destruction workflow.
 
-## 📊 Monitoreo y Logs
+## 📊 Monitoring and Logs
 
-### Ver logs de Lambda
+### View Lambda logs
 
 ```powershell
-# Usando AWS CLI
+# Using AWS CLI
 aws logs tail /aws/lambda/AI-DJ-Handler --follow
 
-# O desde la consola de AWS
+# Or from the AWS console
 # CloudWatch → Log groups → /aws/lambda/AI-DJ-Handler
 ```
 
-### Ver métricas
+### View metrics
 
 - **Lambda**: CloudWatch → Metrics → Lambda → By Function Name
 - **API Gateway**: CloudWatch → Metrics → ApiGateway
@@ -289,80 +289,80 @@ aws logs tail /aws/lambda/AI-DJ-Handler --follow
 ### Error: "Unable to locate credentials"
 
 ```powershell
-# Verificar configuración de AWS
+# Check AWS configuration
 aws configure list
 
-# Reconfigurar si es necesario
+# Reconfigure if necessary
 aws configure
 ```
 
-### Error: "Access Denied" en Bedrock
+### Error: "Access Denied" in Bedrock
 
-- Verifica que has solicitado acceso al modelo Claude 3 Sonnet en la consola de Bedrock
-- Asegúrate de estar en la región correcta (us-east-1)
+- Verify that you have requested access to the Claude 3 Sonnet model in the Bedrock console
+- Make sure you are in the correct region (us-east-1)
 
-### Error: "Invalid client" en Spotify
+### Error: "Invalid client" on Spotify
 
-- Verifica que `SPOTIFY_CLIENT_ID` y `SPOTIFY_CLIENT_SECRET` sean correctos
-- Asegúrate de que las variables de entorno estén configuradas en GitHub Secrets
+- Verify that `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are correct
+- Make sure the environment variables are configured in GitHub Secrets
 
-### Pipeline de GitHub Actions falla
+### GitHub Actions pipeline fails
 
-- Verifica que todos los secretos estén configurados correctamente
-- Revisa los logs del workflow en la pestaña Actions
-- Asegúrate de que el usuario IAM tenga los permisos necesarios
+- Verify that all secrets are configured correctly
+- Review the workflow logs in the Actions tab
+- Make sure the IAM user has the necessary permissions
 
-## 📝 Estructura del Proyecto
+## 📝 Project Structure
 
 ```
 ai-dj/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml          # Pipeline CI/CD
+│       └── deploy.yml          # CI/CD Pipeline
 ├── ai_dj/
 │   ├── __init__.py
-│   └── ai_dj_stack.py         # Definición de infraestructura CDK
+│   └── ai_dj_stack.py         # CDK infrastructure definition
 ├── lambda_src/
 │   ├── __init__.py
-│   ├── app.py                 # Código de la Lambda
-│   └── requirements.txt       # Dependencias de Lambda
-├── app.py                     # Punto de entrada de CDK
-├── cdk.json                   # Configuración de CDK
-├── requirements.txt           # Dependencias del proyecto CDK
+│   ├── app.py                 # Lambda code
+│   └── requirements.txt       # Lambda dependencies
+├── app.py                     # CDK entry point
+├── cdk.json                   # CDK configuration
+├── requirements.txt           # CDK project dependencies
 ├── .gitignore
 └── README.md
 ```
 
-## 🤝 Contribuir
+## 🤝 Contributing
 
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -m 'Añadir nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+1. Fork the repository
+2. Create a branch for your feature (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Open a Pull Request
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
+This project is open source and available under the MIT license.
 
-## 🎯 Próximos Pasos
+## 🎯 Next Steps
 
-- [ ] Implementar autenticación de usuarios con Cognito
-- [ ] Añadir frontend web con React
-- [ ] Soporte para múltiples modelos de IA
-- [ ] Análisis de sentimiento más avanzado
-- [ ] Integración con otras plataformas de música
-- [ ] Tests unitarios y de integración
-- [ ] Documentación de API con OpenAPI/Swagger
+- [ ] Implement user authentication with Cognito
+- [ ] Add a web frontend with React
+- [ ] Support for multiple AI models
+- [ ] More advanced sentiment analysis
+- [ ] Integration with other music platforms
+- [ ] Unit and integration tests
+- [ ] API documentation with OpenAPI/Swagger
 
-## 📞 Soporte
+## 📞 Support
 
-Si tienes problemas o preguntas:
-- Abre un issue en GitHub
-- Revisa la documentación de AWS CDK: https://docs.aws.amazon.com/cdk/
-- Consulta la API de Spotify: https://developer.spotify.com/documentation/web-api
-- Documentación de Bedrock: https://docs.aws.amazon.com/bedrock/
+If you have problems or questions:
+- Open an issue on GitHub
+- Review the AWS CDK documentation: https://docs.aws.amazon.com/cdk/
+- Consult the Spotify API: https://developer.spotify.com/documentation/web-api
+- Bedrock Documentation: https://docs.aws.amazon.com/bedrock/
 
 ---
 
-**¡Disfruta creando playlists con IA! 🎵🤖**
+**Enjoy creating playlists with AI! 🎵🤖**

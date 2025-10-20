@@ -35,7 +35,7 @@ class AiDjStack(Stack):
                 type=dynamodb.AttributeType.STRING
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            removal_policy=RemovalPolicy.DESTROY,  # Para desarrollo - cambiar en producción
+            removal_policy=RemovalPolicy.DESTROY,  # For development - change in production
             point_in_time_recovery=True,
         )
 
@@ -63,10 +63,10 @@ class AiDjStack(Stack):
         # IAM Permissions
         # ========================================
         
-        # Permisos para DynamoDB
+        # Permissions for DynamoDB
         users_table.grant_read_write_data(lambda_function)
 
-        # Permisos para Amazon Bedrock
+        # Permissions for Amazon Bedrock
         lambda_function.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
@@ -95,13 +95,13 @@ class AiDjStack(Stack):
             ),
         )
 
-        # Integración Lambda
+        # Lambda Integration
         lambda_integration = integrations.HttpLambdaIntegration(
             "LambdaIntegration",
             lambda_function,
         )
 
-        # Ruta POST /playlist
+        # POST /playlist route
         http_api.add_routes(
             path="/playlist",
             methods=[apigw.HttpMethod.POST],

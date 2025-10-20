@@ -1,82 +1,82 @@
-# 🎧 Guía de Autenticación con Spotify
+# 🎧 Spotify Authentication Guide
 
-Esta guía explica cómo implementar la autenticación OAuth 2.0 con Spotify para obtener el `access_token` necesario para usar la API de AI DJ.
+This guide explains how to implement OAuth 2.0 authentication with Spotify to obtain the `access_token` needed to use the AI DJ API.
 
-## Flujo de Autenticación
+## Authentication Flow
 
-AI DJ requiere que los usuarios se autentiquen con Spotify para poder crear playlists en su nombre. Utilizamos el **Authorization Code Flow** de OAuth 2.0.
+AI DJ requires users to authenticate with Spotify to create playlists on their behalf. We use the **Authorization Code Flow** of OAuth 2.0.
 
 ```
 ┌─────────┐                                           ┌──────────┐
-│ Usuario │                                           │ Spotify  │
+│  User   │                                           │ Spotify  │
 └────┬────┘                                           └────┬─────┘
      │                                                      │
-     │  1. Clic en "Login with Spotify"                    │
+     │  1. Click on "Login with Spotify"                   │
      ├─────────────────────────────────────────────────────>
      │                                                      │
-     │  2. Redirige a Spotify para autorización            │
+     │  2. Redirects to Spotify for authorization          │
      │<─────────────────────────────────────────────────────┤
      │                                                      │
-     │  3. Usuario aprueba permisos                        │
+     │  3. User approves permissions                       │
      ├─────────────────────────────────────────────────────>
      │                                                      │
-     │  4. Redirige con código de autorización             │
+     │  4. Redirects with authorization code               │
      │<─────────────────────────────────────────────────────┤
      │                                                      │
 ┌────┴────┐                                           ┌────┴─────┐
 │ Backend │                                           │ Spotify  │
 └────┬────┘                                           └────┬─────┘
      │                                                      │
-     │  5. Intercambia código por access_token             │
+     │  5. Exchange code for access_token                  │
      ├─────────────────────────────────────────────────────>
      │                                                      │
-     │  6. Devuelve access_token + refresh_token           │
+     │  6. Returns access_token + refresh_token            │
      │<─────────────────────────────────────────────────────┤
      │                                                      │
 ```
 
-## Paso 1: Configurar la Aplicación en Spotify
+## Step 1: Configure the Application in Spotify
 
-### 1.1 Crear App en Spotify Developer Dashboard
+### 1.1 Create App in Spotify Developer Dashboard
 
-1. Ve a: https://developer.spotify.com/dashboard
-2. Inicia sesión con tu cuenta de Spotify
-3. Haz clic en "Create app"
-4. Completa el formulario:
+1. Go to: https://developer.spotify.com/dashboard
+2. Log in with your Spotify account
+3. Click "Create app"
+4. Complete the form:
    - **App name**: AI DJ
    - **App description**: AI-powered playlist generator
    - **Redirect URIs**: 
-     - `http://localhost:3000/callback` (desarrollo)
-     - `https://tu-dominio.com/callback` (producción)
+     - `http://localhost:3000/callback` (development)
+     - `https://your-domain.com/callback` (production)
    - **APIs**: Web API
-5. Guarda el **Client ID** y **Client Secret**
+5. Save the **Client ID** and **Client Secret**
 
-### 1.2 Configurar Redirect URIs
+### 1.2 Configure Redirect URIs
 
-Las Redirect URIs son las URLs a las que Spotify redirigirá después de la autorización.
+The Redirect URIs are the URLs to which Spotify will redirect after authorization.
 
-**Para desarrollo local**:
+**For local development**:
 ```
 http://localhost:3000/callback
 http://localhost:8888/callback
 ```
 
-**Para producción**:
+**For production**:
 ```
-https://tu-dominio.com/callback
-https://tu-dominio.com/api/auth/callback
+https://your-domain.com/callback
+https://your-domain.com/api/auth/callback
 ```
 
-## Paso 2: Implementar el Flujo de Autorización
+## Step 2: Implement the Authorization Flow
 
-### 2.1 Generar URL de Autorización
+### 2.1 Generate Authorization URL
 
 **Python**:
 ```python
 import urllib.parse
 
 def get_spotify_auth_url():
-    client_id = "tu_client_id"
+    client_id = "your_client_id"
     redirect_uri = "http://localhost:8888/callback"
     scope = "playlist-modify-public playlist-modify-private user-read-private user-read-email"
     
@@ -85,13 +85,13 @@ def get_spotify_auth_url():
         'response_type': 'code',
         'redirect_uri': redirect_uri,
         'scope': scope,
-        'show_dialog': 'true'  # Opcional: siempre mostrar diálogo de autorización
+        'show_dialog': 'true'  # Optional: always show authorization dialog
     }
     
     auth_url = f"https://accounts.spotify.com/authorize?{urllib.parse.urlencode(params)}"
     return auth_url
 
-# Redirigir al usuario a esta URL
+# Redirect the user to this URL
 print(get_spotify_auth_url())
 ```
 
@@ -100,7 +100,7 @@ print(get_spotify_auth_url())
 const querystring = require('querystring');
 
 function getSpotifyAuthUrl() {
-  const clientId = 'tu_client_id';
+  const clientId = 'your_client_id';
   const redirectUri = 'http://localhost:3000/callback';
   const scope = 'playlist-modify-public playlist-modify-private user-read-private user-read-email';
   
@@ -118,26 +118,26 @@ function getSpotifyAuthUrl() {
 console.log(getSpotifyAuthUrl());
 ```
 
-### 2.2 Scopes Necesarios
+### 2.2 Required Scopes
 
-| Scope | Descripción |
+| Scope | Description |
 |-------|-------------|
-| `playlist-modify-public` | Crear y modificar playlists públicas |
-| `playlist-modify-private` | Crear y modificar playlists privadas |
-| `user-read-private` | Leer información del perfil del usuario |
-| `user-read-email` | Leer el email del usuario |
+| `playlist-modify-public` | Create and modify public playlists |
+| `playlist-modify-private` | Create and modify private playlists |
+| `user-read-private` | Read user's profile information |
+| `user-read-email` | Read user's email |
 
-**Scopes opcionales**:
-- `user-library-read`: Leer la biblioteca del usuario
-- `user-top-read`: Leer las canciones y artistas más escuchados
-- `user-read-recently-played`: Leer el historial de reproducción
+**Optional scopes**:
+- `user-library-read`: Read user's library
+- `user-top-read`: Read user's top tracks and artists
+- `user-read-recently-played`: Read user's playback history
 
-### 2.3 Manejar el Callback
+### 2.3 Handle the Callback
 
-Después de que el usuario autorice, Spotify redirigirá a tu `redirect_uri` con un código:
+After the user authorizes, Spotify will redirect to your `redirect_uri` with a code:
 
 ```
-http://localhost:8888/callback?code=AQD...codigo_aqui
+http://localhost:8888/callback?code=AQD...code_here
 ```
 
 **Python (Flask)**:
@@ -148,22 +148,22 @@ import base64
 
 app = Flask(__name__)
 
-CLIENT_ID = "tu_client_id"
-CLIENT_SECRET = "tu_client_secret"
+CLIENT_ID = "your_client_id"
+CLIENT_SECRET = "your_client_secret"
 REDIRECT_URI = "http://localhost:8888/callback"
 
 @app.route('/callback')
 def callback():
-    # Obtener el código de autorización
+    # Get the authorization code
     code = request.args.get('code')
     
     if not code:
         return "Error: No authorization code received", 400
     
-    # Intercambiar código por access token
+    # Exchange code for access token
     token_url = "https://accounts.spotify.com/api/token"
     
-    # Codificar credenciales en Base64
+    # Encode credentials in Base64
     auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
     auth_bytes = auth_str.encode('utf-8')
     auth_base64 = base64.b64encode(auth_bytes).decode('utf-8')
@@ -185,9 +185,9 @@ def callback():
         tokens = response.json()
         access_token = tokens['access_token']
         refresh_token = tokens['refresh_token']
-        expires_in = tokens['expires_in']  # Segundos hasta expiración
+        expires_in = tokens['expires_in']  # Seconds until expiration
         
-        # Guardar tokens de forma segura (base de datos, sesión, etc.)
+        # Save tokens securely (database, session, etc.)
         # ...
         
         return f"Success! Access token: {access_token[:20]}..."
@@ -206,8 +206,8 @@ const querystring = require('querystring');
 
 const app = express();
 
-const CLIENT_ID = 'tu_client_id';
-const CLIENT_SECRET = 'tu_client_secret';
+const CLIENT_ID = 'your_client_id';
+const CLIENT_SECRET = 'your_client_secret';
 const REDIRECT_URI = 'http://localhost:3000/callback';
 
 app.get('/callback', async (req, res) => {
@@ -218,7 +218,7 @@ app.get('/callback', async (req, res) => {
   }
   
   try {
-    // Intercambiar código por access token
+    // Exchange code for access token
     const tokenUrl = 'https://accounts.spotify.com/api/token';
     
     const authBuffer = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
@@ -236,7 +236,7 @@ app.get('/callback', async (req, res) => {
     
     const { access_token, refresh_token, expires_in } = response.data;
     
-    // Guardar tokens de forma segura
+    // Save tokens securely
     // ...
     
     res.send(`Success! Access token: ${access_token.substring(0, 20)}...`);
@@ -250,9 +250,9 @@ app.listen(3000, () => {
 });
 ```
 
-## Paso 3: Renovar el Access Token
+## Step 3: Renew the Access Token
 
-Los access tokens de Spotify expiran después de 1 hora. Usa el `refresh_token` para obtener uno nuevo.
+Spotify access tokens expire after 1 hour. Use the `refresh_token` to get a new one.
 
 **Python**:
 ```python
@@ -260,12 +260,12 @@ import requests
 import base64
 
 def refresh_access_token(refresh_token):
-    client_id = "tu_client_id"
-    client_secret = "tu_client_secret"
+    client_id = "your_client_id"
+    client_secret = "your_client_secret"
     
     token_url = "https://accounts.spotify.com/api/token"
     
-    # Codificar credenciales
+    # Encode credentials
     auth_str = f"{client_id}:{client_secret}"
     auth_bytes = auth_str.encode('utf-8')
     auth_base64 = base64.b64encode(auth_bytes).decode('utf-8')
@@ -291,8 +291,8 @@ def refresh_access_token(refresh_token):
     else:
         raise Exception(f"Error refreshing token: {response.json()}")
 
-# Uso
-new_token, expires_in = refresh_access_token("tu_refresh_token")
+# Usage
+new_token, expires_in = refresh_access_token("your_refresh_token")
 print(f"New access token: {new_token}")
 print(f"Expires in: {expires_in} seconds")
 ```
@@ -303,8 +303,8 @@ const axios = require('axios');
 const querystring = require('querystring');
 
 async function refreshAccessToken(refreshToken) {
-  const clientId = 'tu_client_id';
-  const clientSecret = 'tu_client_secret';
+  const clientId = 'your_client_id';
+  const clientSecret = 'your_client_secret';
   
   const tokenUrl = 'https://accounts.spotify.com/api/token';
   
@@ -329,17 +329,17 @@ async function refreshAccessToken(refreshToken) {
   }
 }
 
-// Uso
-refreshAccessToken('tu_refresh_token')
+// Usage
+refreshAccessToken('your_refresh_token')
   .then(({ accessToken, expiresIn }) => {
     console.log(`New access token: ${accessToken}`);
     console.log(`Expires in: ${expiresIn} seconds`);
   });
 ```
 
-## Paso 4: Usar el Access Token con AI DJ
+## Step 4: Use the Access Token with AI DJ
 
-Una vez que tengas el `access_token`, úsalo para llamar a la API de AI DJ:
+Once you have the `access_token`, use it to call the AI DJ API:
 
 **Python**:
 ```python
@@ -365,17 +365,17 @@ def create_playlist(user_id, prompt, access_token):
     else:
         raise Exception(f"Error: {response.json()}")
 
-# Uso
+# Usage
 result = create_playlist(
-    user_id="usuario123",
-    prompt="Música energética para hacer ejercicio",
-    access_token="BQD...tu_access_token"
+    user_id="user123",
+    prompt="Energetic music for working out",
+    access_token="BQD...your_access_token"
 )
 
-print(f"Playlist creada: {result['playlist_url']}")
+print(f"Playlist created: {result['playlist_url']}")
 ```
 
-## Ejemplo Completo: Aplicación Web Simple
+## Complete Example: Simple Web Application
 
 ### Backend (Flask)
 
@@ -388,8 +388,8 @@ import secrets
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-CLIENT_ID = "tu_client_id"
-CLIENT_SECRET = "tu_client_secret"
+CLIENT_ID = "your_client_id"
+CLIENT_SECRET = "your_client_secret"
 REDIRECT_URI = "http://localhost:8888/callback"
 AI_DJ_API = "https://abc123xyz.execute-api.us-east-1.amazonaws.com/playlist"
 
@@ -410,7 +410,7 @@ def login():
 def callback():
     code = request.args.get('code')
     
-    # Intercambiar código por token
+    # Exchange code for token
     token_url = "https://accounts.spotify.com/api/token"
     auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
     auth_base64 = base64.b64encode(auth_str.encode()).decode()
@@ -429,7 +429,7 @@ def callback():
     response = requests.post(token_url, headers=headers, data=data)
     tokens = response.json()
     
-    # Guardar en sesión
+    # Save to session
     session['access_token'] = tokens['access_token']
     session['refresh_token'] = tokens['refresh_token']
     
@@ -455,9 +455,9 @@ def generate():
     
     prompt = request.form.get('prompt')
     
-    # Llamar a AI DJ API
+    # Call AI DJ API
     payload = {
-        "user_id": "user123",  # En producción, usar ID real del usuario
+        "user_id": "user123",  # In production, use real user ID
         "prompt": prompt,
         "spotify_access_token": session['access_token']
     }
@@ -519,7 +519,7 @@ if __name__ == '__main__':
     </div>
 
     <script>
-        // Verificar si hay token en URL (después de callback)
+        // Check for token in URL (after callback)
         const urlParams = new URLSearchParams(window.location.search);
         const accessToken = urlParams.get('access_token');
         
@@ -533,7 +533,7 @@ if __name__ == '__main__':
         }
 
         function loginWithSpotify() {
-            const clientId = 'tu_client_id';
+            const clientId = 'your_client_id';
             const redirectUri = 'http://localhost:8888/callback';
             const scope = 'playlist-modify-public playlist-modify-private user-read-private';
             
@@ -590,22 +590,22 @@ if __name__ == '__main__':
 </html>
 ```
 
-## Seguridad y Mejores Prácticas
+## Security and Best Practices
 
-### 1. Almacenamiento de Tokens
+### 1. Token Storage
 
-**❌ NO hacer**:
-- Guardar tokens en localStorage (vulnerable a XSS)
-- Exponer tokens en URLs
-- Hardcodear Client Secret en frontend
+**❌ DO NOT**:
+- Save tokens in localStorage (vulnerable to XSS)
+- Expose tokens in URLs
+- Hardcode Client Secret in the frontend
 
-**✅ Hacer**:
-- Guardar tokens en cookies HttpOnly
-- Usar sesiones del lado del servidor
-- Encriptar tokens en base de datos
-- Implementar PKCE para aplicaciones públicas
+**✅ DO**:
+- Save tokens in HttpOnly cookies
+- Use server-side sessions
+- Encrypt tokens in the database
+- Implement PKCE for public applications
 
-### 2. Renovación Automática
+### 2. Automatic Renewal
 
 ```python
 import time
@@ -618,7 +618,7 @@ class SpotifyTokenManager:
         self.expires_at = datetime.now() + timedelta(seconds=expires_in)
     
     def get_valid_token(self):
-        # Si el token expira en menos de 5 minutos, renovarlo
+        # If the token expires in less than 5 minutes, renew it
         if datetime.now() >= self.expires_at - timedelta(minutes=5):
             self.refresh()
         return self.access_token
@@ -628,12 +628,12 @@ class SpotifyTokenManager:
         self.access_token = new_token
         self.expires_at = datetime.now() + timedelta(seconds=expires_in)
 
-# Uso
+# Usage
 token_manager = SpotifyTokenManager(access_token, refresh_token, 3600)
 current_token = token_manager.get_valid_token()
 ```
 
-### 3. Manejo de Errores
+### 3. Error Handling
 
 ```python
 def call_ai_dj_with_retry(user_id, prompt, token_manager, max_retries=2):
@@ -644,13 +644,13 @@ def call_ai_dj_with_retry(user_id, prompt, token_manager, max_retries=2):
             return result
         except Exception as e:
             if "token" in str(e).lower() and attempt < max_retries - 1:
-                # Token inválido, forzar refresh
+                # Invalid token, force refresh
                 token_manager.refresh()
             else:
                 raise
 ```
 
-## Recursos Adicionales
+## Additional Resources
 
 - **Spotify OAuth 2.0 Guide**: https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 - **Spotify API Reference**: https://developer.spotify.com/documentation/web-api/reference/
@@ -661,22 +661,22 @@ def call_ai_dj_with_retry(user_id, prompt, token_manager, max_retries=2):
 
 ### Error: "Invalid redirect URI"
 
-**Causa**: La redirect URI no coincide con la configurada en Spotify Dashboard.
+**Cause**: The redirect URI does not match the one configured in the Spotify Dashboard.
 
-**Solución**: Verifica que la URI sea exactamente igual (incluyendo protocolo, puerto, y path).
+**Solution**: Verify that the URI is exactly the same (including protocol, port, and path).
 
 ### Error: "Invalid client"
 
-**Causa**: Client ID o Client Secret incorrectos.
+**Cause**: Incorrect Client ID or Client Secret.
 
-**Solución**: Verifica las credenciales en Spotify Developer Dashboard.
+**Solution**: Verify the credentials in the Spotify Developer Dashboard.
 
 ### Error: "The access token expired"
 
-**Causa**: El access token ha expirado (después de 1 hora).
+**Cause**: The access token has expired (after 1 hour).
 
-**Solución**: Usa el refresh token para obtener uno nuevo.
+**Solution**: Use the refresh token to get a new one.
 
 ---
 
-**¿Necesitas ayuda?** Consulta la [documentación oficial de Spotify](https://developer.spotify.com/documentation/).
+**Need help?** Check the [official Spotify documentation](https://developer.spotify.com/documentation/).

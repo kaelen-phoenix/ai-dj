@@ -5,7 +5,7 @@ from ai_dj.ai_dj_stack import AiDjStack
 
 app = cdk.App()
 
-# Obtener variables de entorno para Spotify
+# Get environment variables for Spotify
 spotify_client_id = os.environ.get('SPOTIFY_CLIENT_ID', '')
 spotify_client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET', '')
 

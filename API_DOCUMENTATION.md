@@ -6,20 +6,20 @@
 https://{api-id}.execute-api.{region}.amazonaws.com/
 ```
 
-Ejemplo:
+Example:
 ```
 https://abc123xyz.execute-api.us-east-1.amazonaws.com/
 ```
 
 ## Authentication
 
-La API no requiere autenticación a nivel de API Gateway, pero **sí requiere un Spotify Access Token válido** en el body de la petición.
+The API does not require authentication at the API Gateway level, but **it does require a valid Spotify Access Token** in the request body.
 
-### Obtener Spotify Access Token
+### Get Spotify Access Token
 
-Debes implementar el flujo OAuth 2.0 de Spotify. Ver: [Spotify Authorization Guide](https://developer.spotify.com/documentation/web-api/tutorials/code-flow)
+You must implement the Spotify OAuth 2.0 flow. See: [Spotify Authorization Guide](https://developer.spotify.com/documentation/web-api/tutorials/code-flow)
 
-**Scopes requeridos**:
+**Required Scopes**:
 - `playlist-modify-public`
 - `playlist-modify-private`
 - `user-read-private`
@@ -29,7 +29,7 @@ Debes implementar el flujo OAuth 2.0 de Spotify. Ver: [Spotify Authorization Gui
 
 ### POST /playlist
 
-Crea una nueva playlist de Spotify basada en un prompt en lenguaje natural.
+Creates a new Spotify playlist based on a natural language prompt.
 
 #### Request
 
@@ -47,20 +47,20 @@ Content-Type: application/json
 }
 ```
 
-**Parámetros**:
+**Parameters**:
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `user_id` | string | Sí | Identificador único del usuario |
-| `prompt` | string | Sí | Descripción en lenguaje natural de la playlist deseada |
-| `spotify_access_token` | string | Sí | Token de acceso de Spotify OAuth 2.0 |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | string | Yes | Unique user identifier |
+| `prompt` | string | Yes | Natural language description of the desired playlist |
+| `spotify_access_token` | string | Yes | Spotify OAuth 2.0 access token |
 
-**Ejemplo**:
+**Example**:
 ```json
 {
-  "user_id": "usuario123",
-  "prompt": "Música energética para hacer ejercicio, algo de rock y electrónica",
-  "spotify_access_token": "BQDxO8F...token_completo"
+  "user_id": "user123",
+  "prompt": "Energetic music for working out, some rock and electronic",
+  "spotify_access_token": "BQDxO8F...full_token"
 }
 ```
 
@@ -109,21 +109,21 @@ Content-Type: application/json
 
 #### Response Fields
 
-| Campo | Tipo | Descripción |
+| Field | Type | Description |
 |-------|------|-------------|
-| `message` | string | Mensaje de éxito |
-| `playlist_url` | string | URL pública de la playlist en Spotify |
-| `tracks_count` | integer | Número de canciones añadidas a la playlist |
-| `parameters` | object | Parámetros musicales extraídos del prompt |
-| `parameters.genres` | array[string] | Géneros musicales identificados |
-| `parameters.mood` | string | Estado de ánimo de la playlist |
-| `parameters.energy` | float | Nivel de energía (0.0 - 1.0) |
-| `parameters.danceability` | float | Qué tan bailable (0.0 - 1.0) |
-| `parameters.valence` | float | Positividad (0.0 - 1.0) |
-| `parameters.tempo` | integer | Tempo en BPM (opcional) |
-| `parameters.popularity` | integer | Popularidad mínima (0 - 100) |
-| `parameters.playlist_name` | string | Nombre generado para la playlist |
-| `parameters.limit` | integer | Número de canciones solicitadas |
+| `message` | string | Success message |
+| `playlist_url` | string | Public URL of the playlist on Spotify |
+| `tracks_count` | integer | Number of songs added to the playlist |
+| `parameters` | object | Musical parameters extracted from the prompt |
+| `parameters.genres` | array[string] | Identified musical genres |
+| `parameters.mood` | string | Mood of the playlist |
+| `parameters.energy` | float | Energy level (0.0 - 1.0) |
+| `parameters.danceability` | float | How danceable (0.0 - 1.0) |
+| `parameters.valence` | float | Positivity (0.0 - 1.0) |
+| `parameters.tempo` | integer | Tempo in BPM (optional) |
+| `parameters.popularity` | integer | Minimum popularity (0 - 100) |
+| `parameters.playlist_name` | string | Generated name for the playlist |
+| `parameters.limit` | integer | Number of requested songs |
 
 ## Examples
 
@@ -133,8 +133,8 @@ Content-Type: application/json
 curl -X POST https://abc123xyz.execute-api.us-east-1.amazonaws.com/playlist \
   -H "Content-Type: application/json" \
   -d '{
-    "user_id": "usuario123",
-    "prompt": "Música relajante para estudiar, jazz y lo-fi",
+    "user_id": "user123",
+    "prompt": "Relaxing music for studying, jazz and lo-fi",
     "spotify_access_token": "BQDxO8F...token"
   }'
 ```
@@ -147,8 +147,8 @@ $headers = @{
 }
 
 $body = @{
-    user_id = "usuario123"
-    prompt = "Música relajante para estudiar, jazz y lo-fi"
+    user_id = "user123"
+    prompt = "Relaxing music for studying, jazz and lo-fi"
     spotify_access_token = "BQDxO8F...token"
 } | ConvertTo-Json
 
@@ -166,8 +166,8 @@ import requests
 url = "https://abc123xyz.execute-api.us-east-1.amazonaws.com/playlist"
 
 payload = {
-    "user_id": "usuario123",
-    "prompt": "Música relajante para estudiar, jazz y lo-fi",
+    "user_id": "user123",
+    "prompt": "Relaxing music for studying, jazz and lo-fi",
     "spotify_access_token": "BQDxO8F...token"
 }
 
@@ -187,8 +187,8 @@ const axios = require('axios');
 const url = 'https://abc123xyz.execute-api.us-east-1.amazonaws.com/playlist';
 
 const payload = {
-  user_id: 'usuario123',
-  prompt: 'Música relajante para estudiar, jazz y lo-fi',
+  user_id: 'user123',
+  prompt: 'Relaxing music for studying, jazz and lo-fi',
   spotify_access_token: 'BQDxO8F...token'
 };
 
@@ -207,8 +207,8 @@ axios.post(url, payload)
 const url = 'https://abc123xyz.execute-api.us-east-1.amazonaws.com/playlist';
 
 const payload = {
-  user_id: 'usuario123',
-  prompt: 'Música relajante para estudiar, jazz y lo-fi',
+  user_id: 'user123',
+  prompt: 'Relaxing music for studying, jazz and lo-fi',
   spotify_access_token: 'BQDxO8F...token'
 };
 
@@ -226,85 +226,85 @@ fetch(url, {
 
 ## Prompt Examples
 
-Aquí hay ejemplos de prompts que funcionan bien:
+Here are examples of prompts that work well:
 
-### Por Actividad
+### By Activity
 
 ```json
 {
-  "prompt": "Música para correr, ritmo rápido y energético"
+  "prompt": "Music for running, fast and energetic rhythm"
 }
 ```
 
 ```json
 {
-  "prompt": "Playlist para trabajar concentrado, música instrumental sin letra"
+  "prompt": "Playlist for focused work, instrumental music without lyrics"
 }
 ```
 
 ```json
 {
-  "prompt": "Música para una fiesta, reggaeton y música latina bailable"
+  "prompt": "Music for a party, reggaeton and danceable Latin music"
 }
 ```
 
-### Por Género
+### By Genre
 
 ```json
 {
-  "prompt": "Rock clásico de los 70s y 80s, bandas icónicas"
-}
-```
-
-```json
-{
-  "prompt": "Jazz suave para una cena romántica"
+  "prompt": "Classic rock from the 70s and 80s, iconic bands"
 }
 ```
 
 ```json
 {
-  "prompt": "Música electrónica para bailar, house y techno"
-}
-```
-
-### Por Estado de Ánimo
-
-```json
-{
-  "prompt": "Música triste para llorar, baladas emotivas"
+  "prompt": "Smooth jazz for a romantic dinner"
 }
 ```
 
 ```json
 {
-  "prompt": "Canciones alegres y optimistas para empezar el día"
+  "prompt": "Electronic music for dancing, house and techno"
+}
+```
+
+### By Mood
+
+```json
+{
+  "prompt": "Sad music to cry to, emotional ballads"
 }
 ```
 
 ```json
 {
-  "prompt": "Música relajante para meditar y hacer yoga"
-}
-```
-
-### Combinaciones Complejas
-
-```json
-{
-  "prompt": "Indie rock alternativo de los 2000s, bandas poco conocidas, ritmo medio"
+  "prompt": "Happy and optimistic songs to start the day"
 }
 ```
 
 ```json
 {
-  "prompt": "Música latina moderna, mezcla de reggaeton, salsa y bachata, para bailar"
+  "prompt": "Relaxing music for meditation and yoga"
+}
+```
+
+### Complex Combinations
+
+```json
+{
+  "prompt": "Alternative indie rock from the 2000s, little-known bands, medium tempo"
 }
 ```
 
 ```json
 {
-  "prompt": "Clásicos del hip hop de los 90s, rap de la costa este, beats old school"
+  "prompt": "Modern Latin music, mix of reggaeton, salsa and bachata, for dancing"
+}
+```
+
+```json
+{
+  "prompt": "90s hip hop classics, east coast rap, old school beats"
 }
 ```
 
@@ -313,37 +313,37 @@ Aquí hay ejemplos de prompts que funcionan bien:
 ### API Gateway Defaults
 
 - **Burst**: 5,000 requests
-- **Steady-state**: 10,000 requests/segundo
+- **Steady-state**: 10,000 requests/second
 
 ### Bedrock Limits
 
-- **Requests**: 200 requests/minuto
-- **Tokens**: 200K input tokens/minuto
+- **Requests**: 200 requests/minute
+- **Tokens**: 200K input tokens/minute
 
 ### Spotify API Limits
 
-- **Rate limit**: Variable según endpoint
-- **Retry-After**: Header incluido en respuestas 429
+- **Rate limit**: Variable by endpoint
+- **Retry-After**: Header included in 429 responses
 
 ## Error Handling
 
 ### Error Codes
 
-| Status Code | Descripción |
+| Status Code | Description |
 |-------------|-------------|
-| 200 | Success - Playlist creada correctamente |
-| 400 | Bad Request - Parámetros faltantes o inválidos |
-| 401 | Unauthorized - Token de Spotify inválido o expirado |
-| 404 | Not Found - No se encontraron canciones |
-| 429 | Too Many Requests - Rate limit excedido |
-| 500 | Internal Server Error - Error en el servidor |
-| 503 | Service Unavailable - Servicio temporalmente no disponible |
+| 200 | Success - Playlist created successfully |
+| 400 | Bad Request - Missing or invalid parameters |
+| 401 | Unauthorized - Invalid or expired Spotify token |
+| 404 | Not Found - No tracks found |
+| 429 | Too Many Requests - Rate limit exceeded |
+| 500 | Internal Server Error - Server error |
+| 503 | Service Unavailable - Service temporarily unavailable |
 
 ### Error Response Format
 
 ```json
 {
-  "error": "Descripción del error"
+  "error": "Error description"
 }
 ```
 
@@ -357,7 +357,7 @@ Aquí hay ejemplos de prompts que funcionan bien:
 }
 ```
 
-**Solución**: Renovar el access token usando el refresh token de OAuth 2.0.
+**Solution**: Renew the access token using the OAuth 2.0 refresh token.
 
 #### Missing Parameters
 
@@ -367,7 +367,7 @@ Aquí hay ejemplos de prompts que funcionan bien:
 }
 ```
 
-**Solución**: Asegurarse de incluir `user_id`, `prompt` y `spotify_access_token`.
+**Solution**: Make sure to include `user_id`, `prompt`, and `spotify_access_token`.
 
 #### No Tracks Found
 
@@ -377,11 +377,11 @@ Aquí hay ejemplos de prompts que funcionan bien:
 }
 ```
 
-**Solución**: Intentar con un prompt diferente o más general.
+**Solution**: Try with a different or more general prompt.
 
 ## CORS
 
-La API tiene CORS habilitado con la siguiente configuración:
+The API has CORS enabled with the following configuration:
 
 ```
 Access-Control-Allow-Origin: *
@@ -389,15 +389,15 @@ Access-Control-Allow-Methods: POST, OPTIONS
 Access-Control-Allow-Headers: Content-Type, Authorization
 ```
 
-Esto permite llamadas desde cualquier dominio (frontend web).
+This allows calls from any domain (web frontend).
 
 ## Best Practices
 
 ### 1. Token Management
 
-- Almacena el access token de forma segura
-- Implementa refresh automático cuando expire
-- No expongas el token en URLs o logs
+- Store the access token securely
+- Implement automatic refresh when it expires
+- Do not expose the token in URLs or logs
 
 ### 2. Error Handling
 
@@ -418,7 +418,7 @@ try {
   return data;
 } catch (error) {
   console.error('Error creating playlist:', error.message);
-  // Manejar error apropiadamente
+  // Handle error appropriately
 }
 ```
 
@@ -436,7 +436,7 @@ def create_playlist_with_retry(payload, max_retries=3):
             return response.json()
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 429:
-                # Rate limit - esperar y reintentar
+                # Rate limit - wait and retry
                 retry_after = int(e.response.headers.get('Retry-After', 5))
                 time.sleep(retry_after)
             elif attempt == max_retries - 1:
@@ -447,24 +447,24 @@ def create_playlist_with_retry(payload, max_retries=3):
 
 ### 4. Prompt Optimization
 
-**Buenos prompts**:
-- ✅ Específicos: "Rock alternativo de los 90s"
-- ✅ Descriptivos: "Música energética para correr"
-- ✅ Con contexto: "Jazz suave para una cena romántica"
+**Good prompts**:
+- ✅ Specific: "90s alternative rock"
+- ✅ Descriptive: "Energetic music for running"
+- ✅ With context: "Smooth jazz for a romantic dinner"
 
-**Prompts a evitar**:
-- ❌ Muy vagos: "música"
-- ❌ Contradictorios: "música relajante y energética"
-- ❌ Demasiado específicos: "solo canciones de exactamente 3:45 minutos"
+**Prompts to avoid**:
+- ❌ Too vague: "music"
+- ❌ Contradictory: "relaxing and energetic music"
+- ❌ Too specific: "only songs exactly 3:45 minutes long"
 
 ## Monitoring
 
 ### CloudWatch Metrics
 
-Puedes monitorear el uso de la API en CloudWatch:
+You can monitor API usage in CloudWatch:
 
 ```powershell
-# Ver métricas de API Gateway
+# View API Gateway metrics
 aws cloudwatch get-metric-statistics `
   --namespace AWS/ApiGateway `
   --metric-name Count `
@@ -478,7 +478,7 @@ aws cloudwatch get-metric-statistics `
 ### CloudWatch Logs
 
 ```powershell
-# Ver logs de Lambda
+# View Lambda logs
 aws logs tail /aws/lambda/AI-DJ-Handler --follow
 ```
 
@@ -494,13 +494,13 @@ aws logs tail /aws/lambda/AI-DJ-Handler --follow
 
 ## Support
 
-Para reportar problemas o solicitar features:
-- GitHub Issues: [tu-repo]/issues
-- Email: support@ai-dj.com (ejemplo)
+To report issues or request features:
+- GitHub Issues: [your-repo]/issues
+- Email: support@ai-dj.com (example)
 
 ## License
 
-MIT License - Ver LICENSE file para detalles.
+MIT License - See LICENSE file for details.
 
 ---
 

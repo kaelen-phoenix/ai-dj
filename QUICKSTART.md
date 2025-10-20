@@ -1,19 +1,19 @@
 # ⚡ Quick Start - AI DJ
 
-Guía rápida para desarrolladores experimentados que quieren desplegar AI DJ en menos de 15 minutos.
+A quick guide for experienced developers who want to deploy AI DJ in less than 15 minutes.
 
-## Prerrequisitos
+## Prerequisites
 
 - ✅ Python 3.12+
 - ✅ Node.js 20+
-- ✅ AWS CLI configurado
-- ✅ Cuenta AWS con acceso a Bedrock
+- ✅ AWS CLI configured
+- ✅ AWS account with Bedrock access
 - ✅ Spotify Developer App (Client ID + Secret)
 - ✅ GitHub account
 
-## Instalación Rápida (Windows)
+## Quick Install (Windows)
 
-### 1. Instalar Herramientas
+### 1. Install Tools
 
 ```powershell
 # Python
@@ -32,144 +32,144 @@ winget install Git.Git
 npm install -g aws-cdk
 ```
 
-### 2. Configurar AWS
+### 2. Configure AWS
 
 ```powershell
-# Configurar credenciales
+# Configure credentials
 aws configure
-# AWS Access Key ID: [tu_key]
-# AWS Secret Access Key: [tu_secret]
+# AWS Access Key ID: [your_key]
+# AWS Secret Access Key: [your_secret]
 # Default region: us-east-1
 # Default output: json
 
-# Habilitar Bedrock Claude 3 Sonnet
-# Ve a: https://console.aws.amazon.com/bedrock/
+# Enable Bedrock Claude 3 Sonnet
+# Go to: https://console.aws.amazon.com/bedrock/
 # Model access → Request access → Anthropic Claude 3 Sonnet
 ```
 
-### 3. Clonar y Configurar Proyecto
+### 3. Clone and Configure Project
 
 ```powershell
-# Clonar
-cd c:\desarrollo\workspaces\hackaton
-git clone https://github.com/TU_USUARIO/ai-dj.git
+# Clone
+cd c:\dev\workspaces\hackaton
+git clone https://github.com/YOUR_USER/ai-dj.git
 cd ai-dj
 
-# Crear entorno virtual
+# Create virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 cd lambda_src
 pip install -r requirements.txt
 cd ..
 ```
 
-### 4. Desplegar
+### 4. Deploy
 
 ```powershell
-# Configurar variables de entorno
-$env:SPOTIFY_CLIENT_ID = "tu_spotify_client_id"
-$env:SPOTIFY_CLIENT_SECRET = "tu_spotify_client_secret"
+# Configure environment variables
+$env:SPOTIFY_CLIENT_ID = "your_spotify_client_id"
+$env:SPOTIFY_CLIENT_SECRET = "your_spotify_client_secret"
 
-# Bootstrap CDK (solo primera vez)
+# Bootstrap CDK (first time only)
 cdk bootstrap
 
-# Desplegar
+# Deploy
 cdk deploy
 
-# Copiar el API Endpoint del output
+# Copy the API Endpoint from the output
 ```
 
-### 5. Configurar GitHub Actions
+### 5. Configure GitHub Actions
 
-1. Sube el código a GitHub:
+1. Push the code to GitHub:
    ```powershell
-   git remote add origin https://github.com/TU_USUARIO/ai-dj.git
+   git remote add origin https://github.com/YOUR_USER/ai-dj.git
    git branch -M main
    git push -u origin main
    ```
 
-2. Configura secretos en GitHub (Settings → Secrets → Actions):
+2. Configure secrets in GitHub (Settings → Secrets → Actions):
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
    - `AWS_ACCOUNT_ID`
    - `SPOTIFY_CLIENT_ID`
    - `SPOTIFY_CLIENT_SECRET`
 
-3. Próximo push desplegará automáticamente:
+3. The next push will deploy automatically:
    ```powershell
    git add .
    git commit -m "Update"
    git push
    ```
 
-## Probar la API
+## Test the API
 
 ```powershell
-# Guardar endpoint
-$API = "https://tu-endpoint.execute-api.us-east-1.amazonaws.com"
+# Save endpoint
+$API = "https://your-endpoint.execute-api.us-east-1.amazonaws.com"
 
-# Llamar API (necesitas un Spotify access token válido)
+# Call API (you need a valid Spotify access token)
 $body = @{
     user_id = "test_user"
-    prompt = "Música energética para hacer ejercicio"
-    spotify_access_token = "TU_SPOTIFY_TOKEN"
+    prompt = "Energetic music for working out"
+    spotify_access_token = "YOUR_SPOTIFY_TOKEN"
 } | ConvertTo-Json
 
 Invoke-RestMethod -Uri "$API/playlist" -Method Post -Body $body -ContentType "application/json"
 ```
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 ai-dj/
 ├── .github/workflows/deploy.yml    # CI/CD
 ├── ai_dj/
-│   └── ai_dj_stack.py             # Infraestructura CDK
+│   └── ai_dj_stack.py             # CDK Infrastructure
 ├── lambda_src/
 │   ├── app.py                     # Lambda handler
-│   └── requirements.txt           # Dependencias Lambda
-├── app.py                         # Entry point CDK
-├── cdk.json                       # Config CDK
-└── requirements.txt               # Dependencias CDK
+│   └── requirements.txt           # Lambda dependencies
+├── app.py                         # CDK entry point
+├── cdk.json                       # CDK config
+└── requirements.txt               # CDK dependencies
 ```
 
-## Comandos Útiles
+## Useful Commands
 
 ```powershell
-# Sintetizar CloudFormation
+# Synthesize CloudFormation
 cdk synth
 
-# Ver diferencias antes de desplegar
+# See differences before deploying
 cdk diff
 
-# Desplegar
+# Deploy
 cdk deploy
 
-# Ver logs de Lambda
+# View Lambda logs
 aws logs tail /aws/lambda/AI-DJ-Handler --follow
 
-# Destruir stack
+# Destroy stack
 cdk destroy
 ```
 
-## Recursos AWS Creados
+## Created AWS Resources
 
 - **Lambda Function**: `AI-DJ-Handler`
 - **DynamoDB Table**: `AI-DJ-Users`
 - **API Gateway**: `AI-DJ-API`
-- **IAM Role**: Para Lambda con permisos DynamoDB y Bedrock
+- **IAM Role**: For Lambda with DynamoDB and Bedrock permissions
 - **CloudWatch Log Group**: `/aws/lambda/AI-DJ-Handler`
 
-## Costos Estimados
+## Estimated Costs
 
-- **Lambda**: ~$0.20/mes (1000 invocaciones)
-- **API Gateway**: ~$1.00/mes (1000 requests)
-- **DynamoDB**: ~$1.25/mes (on-demand)
-- **Bedrock**: ~$20.00/mes (1000 requests)
-- **Total**: ~$22.45/mes
+- **Lambda**: ~$0.20/month (1000 invocations)
+- **API Gateway**: ~$1.00/month (1000 requests)
+- **DynamoDB**: ~$1.25/month (on-demand)
+- **Bedrock**: ~$20.00/month (1000 requests)
+- **Total**: ~$22.45/month
 
 ## Troubleshooting
 
@@ -178,36 +178,36 @@ cdk destroy
 aws configure
 ```
 
-### Error: "Access Denied" en Bedrock
-- Habilita Claude 3 Sonnet en la consola de Bedrock (us-east-1)
+### Error: "Access Denied" in Bedrock
+- Enable Claude 3 Sonnet in the Bedrock console (us-east-1)
 
-### Error: "Invalid client" en Spotify
-- Verifica Client ID y Secret en Spotify Developer Dashboard
+### Error: "Invalid client" on Spotify
+- Check Client ID and Secret in Spotify Developer Dashboard
 
-### GitHub Actions falla
-- Verifica que todos los secretos estén configurados
-- Revisa los logs en la pestaña Actions
+### GitHub Actions fails
+- Check that all secrets are configured
+- Review the logs in the Actions tab
 
-## Próximos Pasos
+## Next Steps
 
-1. **Implementar autenticación Spotify**: Ver `SPOTIFY_AUTH_GUIDE.md`
-2. **Crear frontend**: React + TailwindCSS
-3. **Añadir tests**: pytest + moto
-4. **Configurar alarmas**: CloudWatch Alarms
+1. **Implement Spotify authentication**: See `SPOTIFY_AUTH_GUIDE.md`
+2. **Create a frontend**: React + TailwindCSS
+3. **Add tests**: pytest + moto
+4. **Configure alarms**: CloudWatch Alarms
 
-## Documentación Completa
+## Full Documentation
 
-- **Setup detallado**: `SETUP_GUIDE.md`
-- **Arquitectura**: `ARCHITECTURE.md`
+- **Detailed Setup**: `SETUP_GUIDE.md`
+- **Architecture**: `ARCHITECTURE.md`
 - **API Reference**: `API_DOCUMENTATION.md`
 - **Spotify OAuth**: `SPOTIFY_AUTH_GUIDE.md`
 
-## Soporte
+## Support
 
-- GitHub Issues: https://github.com/TU_USUARIO/ai-dj/issues
+- GitHub Issues: https://github.com/YOUR_USER/ai-dj/issues
 - AWS CDK Docs: https://docs.aws.amazon.com/cdk/
 - Spotify API: https://developer.spotify.com/documentation/
 
 ---
 
-**¡Listo para crear playlists con IA! 🎵🤖**
+**Ready to create playlists with AI! 🎵🤖**

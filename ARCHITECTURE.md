@@ -1,20 +1,20 @@
-# 🏗️ Arquitectura de AI DJ
+# 🏗️ AI DJ Architecture
 
-## Diagrama de Arquitectura
+## Architecture Diagram
 
 ```
-┌─────────────┐
-│   Usuario   │
-└──────┬──────┘
-       │ HTTP POST /playlist
-       │ {user_id, prompt, spotify_access_token}
-       ▼
+┌───────────┐
+│   User    │
+└─────┬─────┘
+      │ HTTP POST /playlist
+      │ {user_id, prompt, spotify_access_token}
+      ▼
 ┌─────────────────────────────────────────┐
 │     Amazon API Gateway (HTTP API)       │
-│  - CORS habilitado                      │
-│  - Ruta: POST /playlist                 │
+│  - CORS enabled                         │
+│  - Route: POST /playlist                │
 └──────────────┬──────────────────────────┘
-               │ Invoca
+               │ Invokes
                ▼
 ┌─────────────────────────────────────────┐
 │         AWS Lambda Function             │
@@ -26,20 +26,20 @@
    │        │        │
    │        │        └──────────────────┐
    │        │                           │
-   │        │ Invoca modelo             │ Lee/Escribe
+   │        │ Invokes model             │ Read/Write
    │        ▼                           ▼
    │  ┌──────────────────┐    ┌──────────────────┐
    │  │ Amazon Bedrock   │    │ Amazon DynamoDB  │
-   │  │ Claude 3 Sonnet  │    │ Tabla: AI-DJ-    │
+   │  │ Claude 3 Sonnet  │    │ Table: AI-DJ-    │
    │  │                  │    │ Users            │
-   │  │ Interpreta       │    │ PK: user_id      │
-   │  │ lenguaje natural │    │                  │
-   │  │ → parámetros     │    │ Almacena:        │
-   │  │   musicales      │    │ - Historial      │
+   │  │ Interprets       │    │ PK: user_id      │
+   │  │ natural language │    │                  │
+   │  │ → musical        │    │ Stores:          │
+   │  │   parameters     │    │ - History        │
    │  └──────────────────┘    │ - Playlists      │
    │                          └──────────────────┘
    │
-   │ Busca canciones y crea playlist
+   │ Searches for songs and creates playlist
    ▼
 ┌─────────────────────────────────────────┐
 │         Spotify Web API                 │
@@ -50,36 +50,36 @@
 └─────────────────────────────────────────┘
 ```
 
-## Flujo de Datos Detallado
+## Detailed Data Flow
 
-### 1. Recepción de Petición
+### 1. Request Reception
 
 ```
-Usuario → API Gateway → Lambda
+User → API Gateway → Lambda
 ```
 
-**Payload de entrada**:
+**Input Payload**:
 ```json
 {
-  "user_id": "usuario123",
-  "prompt": "Música energética para hacer ejercicio",
+  "user_id": "user123",
+  "prompt": "Energetic music for working out",
   "spotify_access_token": "BQD...token"
 }
 ```
 
-### 2. Interpretación con IA
+### 2. AI Interpretation
 
 ```
 Lambda → Bedrock (Claude 3 Sonnet)
 ```
 
-**Prompt al modelo**:
+**Prompt to the model**:
 ```
-Sistema: Eres un experto en música que interpreta peticiones...
-Usuario: Crea una playlist basada en: Música energética para hacer ejercicio
+System: You are a music expert who interprets user requests...
+User: Create a playlist based on: Energetic music for working out
 ```
 
-**Respuesta del modelo**:
+**Model Response**:
 ```json
 {
   "genres": ["rock", "electronic", "pop"],
@@ -94,7 +94,7 @@ Usuario: Crea una playlist basada en: Música energética para hacer ejercicio
 }
 ```
 
-### 3. Búsqueda de Canciones
+### 3. Song Search
 
 ```
 Lambda → Spotify API (Search)
@@ -106,9 +106,9 @@ GET /v1/search?q=genre:"rock" OR genre:"electronic"&type=track&limit=50
 Authorization: Bearer {spotify_access_token}
 ```
 
-**Response**: Lista de 50 canciones candidatas
+**Response**: List of 50 candidate songs
 
-### 4. Filtrado por Audio Features
+### 4. Filtering by Audio Features
 
 ```
 Lambda → Spotify API (Audio Features)
@@ -120,9 +120,9 @@ GET /v1/audio-features?ids=track1,track2,...,track50
 Authorization: Bearer {spotify_access_token}
 ```
 
-**Response**: Características de audio de cada canción
+**Response**: Audio features for each song
 
-**Algoritmo de filtrado**:
+**Filtering algorithm**:
 ```python
 for track, features in zip(tracks, audio_features):
     energy_diff = abs(features['energy'] - target_energy)
@@ -134,24 +134,24 @@ for track, features in zip(tracks, audio_features):
     if track['popularity'] >= min_popularity:
         filtered_tracks.append({'track': track, 'score': score})
 
-# Ordenar por score y tomar los mejores
+# Sort by score and take the best ones
 filtered_tracks.sort(key=lambda x: x['score'], reverse=True)
 best_tracks = filtered_tracks[:limit]
 ```
 
-### 5. Creación de Playlist
+### 5. Playlist Creation
 
 ```
 Lambda → Spotify API (Create Playlist)
 ```
 
-**Request 1**: Obtener Spotify User ID
+**Request 1**: Get Spotify User ID
 ```
 GET /v1/me
 Authorization: Bearer {spotify_access_token}
 ```
 
-**Request 2**: Crear playlist
+**Request 2**: Create playlist
 ```
 POST /v1/users/{user_id}/playlists
 {
@@ -161,7 +161,7 @@ POST /v1/users/{user_id}/playlists
 }
 ```
 
-**Request 3**: Añadir canciones
+**Request 3**: Add songs
 ```
 POST /v1/playlists/{playlist_id}/tracks
 {
@@ -169,22 +169,22 @@ POST /v1/playlists/{playlist_id}/tracks
 }
 ```
 
-### 6. Almacenamiento en DynamoDB
+### 6. Storage in DynamoDB
 
 ```
 Lambda → DynamoDB
 ```
 
-**Operación**: PutItem
+**Operation**: PutItem
 
 **Item**:
 ```json
 {
-  "user_id": "usuario123",
+  "user_id": "user123",
   "playlists": [
     {
       "playlist_url": "https://open.spotify.com/playlist/xyz789",
-      "prompt": "Música energética para hacer ejercicio",
+      "prompt": "Energetic music for working out",
       "parameters": {
         "genres": ["rock", "electronic"],
         "mood": "energetic",
@@ -197,10 +197,10 @@ Lambda → DynamoDB
 }
 ```
 
-### 7. Respuesta al Usuario
+### 7. Response to the User
 
 ```
-Lambda → API Gateway → Usuario
+Lambda → API Gateway → User
 ```
 
 **Response**:
@@ -226,25 +226,25 @@ Lambda → API Gateway → Usuario
 }
 ```
 
-## Componentes de AWS
+## AWS Components
 
 ### AWS Lambda
 
-**Configuración**:
+**Configuration**:
 - **Runtime**: Python 3.12
 - **Handler**: `app.lambda_handler`
-- **Timeout**: 60 segundos
+- **Timeout**: 60 seconds
 - **Memory**: 512 MB
-- **Concurrency**: Sin límite (por defecto)
+- **Concurrency**: No limit (default)
 
-**Variables de entorno**:
-- `SPOTIFY_CLIENT_ID`: ID de cliente de Spotify
-- `SPOTIFY_CLIENT_SECRET`: Secret de cliente de Spotify
-- `DYNAMODB_TABLE_NAME`: Nombre de la tabla DynamoDB
-- `BEDROCK_MODEL_ID`: ID del modelo de Bedrock
-- `AWS_REGION`: Región de AWS (automática)
+**Environment variables**:
+- `SPOTIFY_CLIENT_ID`: Spotify client ID
+- `SPOTIFY_CLIENT_SECRET`: Spotify client secret
+- `DYNAMODB_TABLE_NAME`: DynamoDB table name
+- `BEDROCK_MODEL_ID`: Bedrock model ID
+- `AWS_REGION`: AWS region (automatic)
 
-**Permisos IAM**:
+**IAM Permissions**:
 - `dynamodb:GetItem`
 - `dynamodb:PutItem`
 - `bedrock:InvokeModel`
@@ -254,27 +254,27 @@ Lambda → API Gateway → Usuario
 
 ### Amazon API Gateway
 
-**Tipo**: HTTP API (más económico y simple que REST API)
+**Type**: HTTP API (cheaper and simpler than REST API)
 
-**Configuración**:
-- **CORS**: Habilitado para todos los orígenes
-- **Métodos permitidos**: POST, OPTIONS
-- **Headers permitidos**: Content-Type, Authorization
+**Configuration**:
+- **CORS**: Enabled for all origins
+- **Allowed methods**: POST, OPTIONS
+- **Allowed headers**: Content-Type, Authorization
 
-**Rutas**:
+**Routes**:
 - `POST /playlist` → Lambda Integration
 
-**Throttling**: Sin límites personalizados (usa defaults de AWS)
+**Throttling**: No custom limits (uses AWS defaults)
 
 ### Amazon DynamoDB
 
-**Configuración**:
-- **Nombre**: AI-DJ-Users
+**Configuration**:
+- **Name**: AI-DJ-Users
 - **Partition Key**: `user_id` (String)
 - **Billing Mode**: Pay-per-request (on-demand)
-- **Point-in-time recovery**: Habilitado
+- **Point-in-time recovery**: Enabled
 
-**Estructura de datos**:
+**Data structure**:
 ```
 {
   "user_id": "String (PK)",
@@ -295,49 +295,49 @@ Lambda → API Gateway → Usuario
 }
 ```
 
-**Patrones de acceso**:
-1. Obtener historial de un usuario: `GetItem(user_id)`
-2. Guardar nueva playlist: `PutItem(user_id, playlists)`
+**Access patterns**:
+1. Get a user's history: `GetItem(user_id)`
+2. Save a new playlist: `PutItem(user_id, playlists)`
 
 ### Amazon Bedrock
 
-**Modelo**: `anthropic.claude-3-sonnet-20240229-v1:0`
+**Model**: `anthropic.claude-3-sonnet-20240229-v1:0`
 
-**Características**:
-- **Contexto**: 200K tokens
-- **Salida máxima**: 4K tokens
-- **Multimodal**: Sí (texto e imágenes)
-- **Velocidad**: ~50 tokens/segundo
+**Features**:
+- **Context**: 200K tokens
+- **Max output**: 4K tokens
+- **Multimodal**: Yes (text and images)
+- **Speed**: ~50 tokens/second
 
-**Uso en AI DJ**:
-- Interpretación de lenguaje natural
-- Extracción de parámetros musicales
-- Generación de nombres de playlists
+**Usage in AI DJ**:
+- Natural language interpretation
+- Extraction of musical parameters
+- Generation of playlist names
 
-**Costo estimado**:
+**Estimated cost**:
 - Input: $0.003 / 1K tokens
 - Output: $0.015 / 1K tokens
-- ~$0.02 por petición
+- ~$0.02 per request
 
-## Infraestructura como Código (CDK)
+## Infrastructure as Code (CDK)
 
-### Stack Principal: `AiDjStack`
+### Main Stack: `AiDjStack`
 
-**Recursos creados**:
+**Created resources**:
 1. DynamoDB Table
 2. Lambda Function
-3. IAM Role (para Lambda)
-4. IAM Policies (permisos)
+3. IAM Role (for Lambda)
+4. IAM Policies (permissions)
 5. API Gateway HTTP API
 6. Lambda Integration
-7. CloudWatch Log Groups (automático)
+7. CloudWatch Log Groups (automatic)
 
 **Outputs**:
-- `ApiEndpoint`: URL del API Gateway
-- `DynamoDBTableName`: Nombre de la tabla
-- `LambdaFunctionName`: Nombre de la función
+- `ApiEndpoint`: API Gateway URL
+- `DynamoDBTableName`: Table name
+- `LambdaFunctionName`: Function name
 
-### Dependencias
+### Dependencies
 
 **CDK (requirements.txt)**:
 ```
@@ -351,146 +351,146 @@ boto3>=1.34.0
 requests>=2.31.0
 ```
 
-## CI/CD con GitHub Actions
+## CI/CD with GitHub Actions
 
 ### Workflow: `deploy.yml`
 
 **Triggers**:
-- Push a rama `main`
+- Push to `main` branch
 - Manual (workflow_dispatch)
 
 **Jobs**:
-1. **Checkout**: Clonar código
-2. **Configure AWS**: Autenticación con AWS
-3. **Setup Node.js**: Instalar Node.js 20
-4. **Install CDK**: Instalar AWS CDK CLI
-5. **Setup Python**: Instalar Python 3.12
-6. **Install Dependencies**: Instalar dependencias CDK y Lambda
-7. **CDK Synth**: Sintetizar CloudFormation
-8. **CDK Bootstrap**: Preparar entorno (solo primera vez)
-9. **CDK Deploy**: Desplegar stack
-10. **Display Outputs**: Mostrar resultados
-11. **Upload Artifacts**: Guardar outputs.json
+1. **Checkout**: Clone code
+2. **Configure AWS**: Authenticate with AWS
+3. **Setup Node.js**: Install Node.js 20
+4. **Install CDK**: Install AWS CDK CLI
+5. **Setup Python**: Install Python 3.12
+6. **Install Dependencies**: Install CDK and Lambda dependencies
+7. **CDK Synth**: Synthesize CloudFormation
+8. **CDK Bootstrap**: Prepare environment (first time only)
+9. **CDK Deploy**: Deploy stack
+10. **Display Outputs**: Show results
+11. **Upload Artifacts**: Save outputs.json
 
-**Secretos requeridos**:
+**Required secrets**:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_ACCOUNT_ID`
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 
-## Seguridad
+## Security
 
-### Autenticación y Autorización
+### Authentication and Authorization
 
 **API Gateway**:
-- Sin autenticación (público)
-- CORS configurado
-- Rate limiting por defecto de AWS
+- No authentication (public)
+- CORS configured
+- Default AWS rate limiting
 
 **Spotify**:
 - OAuth 2.0
-- Access token del usuario requerido
+- User access token required
 - Scopes: `playlist-modify-public`, `playlist-modify-private`
 
 **AWS**:
-- IAM roles con permisos mínimos
-- Credenciales en GitHub Secrets
-- No hay credenciales hardcodeadas
+- IAM roles with least privilege
+- Credentials in GitHub Secrets
+- No hardcoded credentials
 
-### Datos Sensibles
+### Sensitive Data
 
-**Variables de entorno**:
-- Encriptadas en Lambda
-- Inyectadas en tiempo de despliegue
-- No expuestas en logs
+**Environment variables**:
+- Encrypted in Lambda
+- Injected at deployment time
+- Not exposed in logs
 
 **DynamoDB**:
-- Encriptación en reposo (por defecto)
-- Encriptación en tránsito (HTTPS)
-- Backups automáticos con PITR
+- Encryption at rest (default)
+- Encryption in transit (HTTPS)
+- Automatic backups with PITR
 
-### Mejores Prácticas Implementadas
+### Implemented Best Practices
 
-1. ✅ Principio de menor privilegio (IAM)
-2. ✅ Secretos en variables de entorno
-3. ✅ HTTPS en todas las comunicaciones
-4. ✅ Validación de inputs
-5. ✅ Manejo de errores
-6. ✅ Logging estructurado
-7. ✅ Encriptación de datos
+1. ✅ Principle of least privilege (IAM)
+2. ✅ Secrets in environment variables
+3. ✅ HTTPS in all communications
+4. ✅ Input validation
+5. ✅ Error handling
+6. ✅ Structured logging
+7. ✅ Data encryption
 
-## Escalabilidad
+## Scalability
 
-### Límites y Capacidad
+### Limits and Capacity
 
 **Lambda**:
-- **Concurrencia**: 1000 ejecuciones simultáneas (por defecto)
-- **Escalado**: Automático
-- **Cold start**: ~1-2 segundos
+- **Concurrency**: 1000 concurrent executions (default)
+- **Scaling**: Automatic
+- **Cold start**: ~1-2 seconds
 
 **API Gateway**:
-- **Requests**: 10,000 RPS (por defecto)
+- **Requests**: 10,000 RPS (default)
 - **Throttling**: Configurable
 
 **DynamoDB**:
-- **Capacidad**: Ilimitada (on-demand)
-- **Throughput**: Automático
-- **Latencia**: <10ms (p99)
+- **Capacity**: Unlimited (on-demand)
+- **Throughput**: Automatic
+- **Latency**: <10ms (p99)
 
 **Bedrock**:
-- **Throttling**: 200 requests/minuto (por defecto)
+- **Throttling**: 200 requests/minute (default)
 - **Tokens**: 200K input, 4K output
 
-### Optimizaciones Potenciales
+### Potential Optimizations
 
 1. **Lambda**:
-   - Provisioned concurrency para eliminar cold starts
-   - Aumentar memoria para más CPU
-   - Reutilizar conexiones HTTP
+   - Provisioned concurrency to eliminate cold starts
+   - Increase memory for more CPU
+   - Reuse HTTP connections
 
 2. **DynamoDB**:
-   - DAX (cache) para lecturas frecuentes
-   - Global tables para multi-región
-   - Índices secundarios para queries complejas
+   - DAX (cache) for frequent reads
+   - Global tables for multi-region
+   - Secondary indexes for complex queries
 
 3. **API Gateway**:
-   - Cache de respuestas
-   - API Keys para rate limiting por usuario
-   - WAF para protección DDoS
+   - Response caching
+   - API Keys for per-user rate limiting
+   - WAF for DDoS protection
 
 4. **Bedrock**:
-   - Cache de respuestas comunes
+   - Caching of common responses
    - Batch processing
-   - Modelo más pequeño (Haiku) para casos simples
+   - Smaller model (Haiku) for simple cases
 
-## Costos Estimados
+## Estimated Costs
 
-### Por Petición
+### Per Request
 
 - **Lambda**: $0.0000002 (200ms @ 512MB)
 - **API Gateway**: $0.000001
 - **DynamoDB**: $0.00000125 (1 write + 1 read)
-- **Bedrock**: $0.02 (promedio)
-- **Spotify API**: Gratis
-- **Total**: ~$0.021 por playlist creada
+- **Bedrock**: $0.02 (average)
+- **Spotify API**: Free
+- **Total**: ~$0.021 per created playlist
 
-### Mensual (1000 playlists)
+### Monthly (1000 playlists)
 
 - **Lambda**: $0.20
 - **API Gateway**: $1.00
 - **DynamoDB**: $1.25
 - **Bedrock**: $20.00
-- **Total**: ~$22.45/mes
+- **Total**: ~$22.45/month
 
-### Free Tier (primer año)
+### Free Tier (first year)
 
-- **Lambda**: 1M requests/mes gratis
-- **API Gateway**: 1M requests/mes gratis
-- **DynamoDB**: 25GB storage + 25 WCU/RCU gratis
-- **Bedrock**: No tiene free tier
+- **Lambda**: 1M requests/month free
+- **API Gateway**: 1M requests/month free
+- **DynamoDB**: 25GB storage + 25 WCU/RCU free
+- **Bedrock**: No free tier
 
-## Monitoreo y Observabilidad
+## Monitoring and Observability
 
 ### CloudWatch Metrics
 
@@ -521,7 +521,7 @@ requests>=2.31.0
 /aws/lambda/AI-DJ-Handler
 ```
 
-**Logs estructurados**:
+**Structured logs**:
 ```python
 print(f"Processing request for user_id: {user_id}")
 print(f"Extracted music parameters: {music_parameters}")
@@ -529,16 +529,16 @@ print(f"Found {len(tracks)} tracks")
 print(f"Created playlist: {playlist_url}")
 ```
 
-### Alarmas Recomendadas
+### Recommended Alarms
 
-1. **Lambda Errors > 5% en 5 minutos**
-2. **API Gateway 5XX > 1% en 5 minutos**
-3. **Lambda Duration > 50 segundos**
+1. **Lambda Errors > 5% in 5 minutes**
+2. **API Gateway 5XX > 1% in 5 minutes**
+3. **Lambda Duration > 50 seconds**
 4. **DynamoDB Throttled Requests > 0**
 
 ## Testing
 
-### Pruebas Locales
+### Local Tests
 
 **Lambda**:
 ```python
@@ -563,39 +563,39 @@ cdk synth
 cdk diff
 ```
 
-### Pruebas de Integración
+### Integration Tests
 
 ```powershell
-# Desplegar a entorno de test
+# Deploy to test environment
 cdk deploy --context env=test
 
-# Ejecutar pruebas
+# Run tests
 pytest tests/integration/
 
-# Limpiar
+# Clean up
 cdk destroy --context env=test
 ```
 
-## Roadmap de Mejoras
+## Improvement Roadmap
 
-### Corto Plazo
-- [ ] Autenticación de usuarios (Cognito)
-- [ ] Rate limiting por usuario
-- [ ] Cache de resultados de Bedrock
-- [ ] Tests unitarios
+### Short Term
+- [ ] User authentication (Cognito)
+- [ ] Per-user rate limiting
+- [ ] Bedrock results caching
+- [ ] Unit tests
 
-### Medio Plazo
-- [ ] Frontend web (React)
-- [ ] Múltiples modelos de IA
-- [ ] Análisis de sentimiento avanzado
-- [ ] Métricas de uso
+### Medium Term
+- [ ] Web frontend (React)
+- [ ] Multiple AI models
+- [ ] Advanced sentiment analysis
+- [ ] Usage metrics
 
-### Largo Plazo
-- [ ] Multi-región
-- [ ] Integración con otras plataformas (Apple Music, YouTube Music)
-- [ ] Recomendaciones personalizadas
-- [ ] API pública con documentación OpenAPI
+### Long Term
+- [ ] Multi-region
+- [ ] Integration with other platforms (Apple Music, YouTube Music)
+- [ ] Personalized recommendations
+- [ ] Public API with OpenAPI documentation
 
 ---
 
-**Última actualización**: 2025-10-10
+**Last updated**: 2025-10-10
