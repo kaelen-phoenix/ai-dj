@@ -634,6 +634,9 @@
 
         // Función para iniciar sesión con Spotify
         function loginWithSpotify() {
+            // Detectar si es móvil
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
             const authUrl = `https://accounts.spotify.com/authorize?${new URLSearchParams({
                 client_id: SPOTIFY_CLIENT_ID,
                 response_type: 'code',
@@ -642,7 +645,12 @@
                 show_dialog: 'true'
             })}`;
             
-            window.location.href = authUrl;
+            // En móvil, abrir en la misma ventana para evitar problemas con la app
+            if (isMobile) {
+                window.location.href = authUrl;
+            } else {
+                window.location.href = authUrl;
+            }
         }
 
         // Función para cerrar sesión

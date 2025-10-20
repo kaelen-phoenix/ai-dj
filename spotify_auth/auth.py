@@ -142,17 +142,18 @@ def create_success_page(token_data):
     <head>
         <title>Authentication Successful</title>
         <meta charset="UTF-8">
-        <meta http-equiv="refresh" content="0;url={redirect_url}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             body {{
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #1DB954 0%, #191414 100%);
+                background: linear-gradient(135deg, #FF9900 0%, #232F3E 100%);
                 min-height: 100vh;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 margin: 0;
                 color: white;
+                padding: 20px;
             }}
             .container {{
                 background: rgba(0, 0, 0, 0.8);
@@ -160,10 +161,11 @@ def create_success_page(token_data):
                 border-radius: 20px;
                 text-align: center;
                 max-width: 500px;
+                width: 100%;
             }}
             .spinner {{
-                border: 3px solid rgba(29, 185, 84, 0.3);
-                border-top: 3px solid #1DB954;
+                border: 3px solid rgba(255, 153, 0, 0.3);
+                border-top: 3px solid #FF9900;
                 border-radius: 50%;
                 width: 50px;
                 height: 50px;
@@ -175,19 +177,35 @@ def create_success_page(token_data):
                 100% {{ transform: rotate(360deg); }}
             }}
             h1 {{
-                color: #1DB954;
+                color: #FF9900;
+                font-size: 24px;
+            }}
+            p {{
+                font-size: 16px;
             }}
         </style>
         <script>
-            // Redirect immediately with token in hash
-            window.location.href = '{redirect_url}';
+            // Redirect immediately with token in hash - compatible with mobile
+            (function() {{
+                try {{
+                    // Try to redirect
+                    window.location.replace('{redirect_url}');
+                }} catch(e) {{
+                    // Fallback
+                    window.location.href = '{redirect_url}';
+                }}
+            }})();
         </script>
     </head>
     <body>
         <div class="container">
             <h1>✅ Authentication Successful</h1>
             <div class="spinner"></div>
-            <p>Redirecting...</p>
+            <p>Redirecting to AI DJ...</p>
+            <p style="font-size: 12px; margin-top: 20px; color: #999;">
+                If you're not redirected automatically, 
+                <a href="{redirect_url}" style="color: #FF9900;">click here</a>
+            </p>
         </div>
     </body>
     </html>
