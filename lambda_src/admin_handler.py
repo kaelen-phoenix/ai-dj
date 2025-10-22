@@ -9,6 +9,11 @@ dynamodb = boto3.resource('dynamodb')
 
 # Environment Variables
 DYNAMODB_TABLE_NAME = os.environ.get('DYNAMODB_TABLE_NAME', 'AI-DJ-Users')
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+
+if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+    raise ValueError('ADMIN_USERNAME and ADMIN_PASSWORD environment variables must be set')
 
 # DynamoDB Table
 table = dynamodb.Table(DYNAMODB_TABLE_NAME)
@@ -58,7 +63,7 @@ def lambda_handler(event, context):
     print(f"🔐 Auth check: user={auth_user}, pass={'*' * len(auth_pass)}")
     
     # Validate credentials
-    if auth_user != 'nomade' or auth_pass != 'eternauta':
+    if auth_user != ADMIN_USERNAME or auth_pass != ADMIN_PASSWORD:
         return create_response(401, {
             'error': 'Unauthorized',
             'message': 'Invalid admin credentials'

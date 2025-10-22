@@ -1,3 +1,5 @@
+import os
+
 from aws_cdk import (
     Stack,
     aws_lambda as _lambda,
@@ -148,6 +150,12 @@ class AiDjStack(Stack):
             },
         )
         
+        admin_username = os.environ.get("ADMIN_USERNAME")
+        admin_password = os.environ.get("ADMIN_PASSWORD")
+
+        if not admin_username or not admin_password:
+            raise ValueError("ADMIN_USERNAME and ADMIN_PASSWORD environment variables must be set before deploying.")
+
         # Lambda 6: Admin Handler (list access requests)
         admin_lambda = _lambda.Function(
             self,
@@ -161,6 +169,8 @@ class AiDjStack(Stack):
             memory_size=256,
             environment={
                 "DYNAMODB_TABLE_NAME": users_table.table_name,
+                "ADMIN_USERNAME": admin_username,
+                "ADMIN_PASSWORD": admin_password,
             },
         )
         
@@ -177,6 +187,8 @@ class AiDjStack(Stack):
             memory_size=256,
             environment={
                 "DYNAMODB_TABLE_NAME": users_table.table_name,
+                "ADMIN_USERNAME": admin_username,
+                "ADMIN_PASSWORD": admin_password,
             },
         )
         
