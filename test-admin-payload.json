@@ -1,0 +1,7 @@
+{
+  "httpMethod": "GET",
+  "headers": {
+    "x-admin-user": "nomade",
+    "x-admin-pass": "eternauta"
+  }
+}

@@ -3,8 +3,10 @@ import os
 import boto3
 import requests
 import base64
+import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from botocore.exceptions import ClientError
 
 
 # AWS Client Configuration
@@ -15,10 +17,36 @@ bedrock_runtime = boto3.client('bedrock-runtime', region_name=os.environ.get('AW
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 DYNAMODB_TABLE_NAME = os.environ.get('DYNAMODB_TABLE_NAME')
-BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-sonnet-20240229-v1:0')
+# Using Claude Haiku 4.5 - latest and fastest
+BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'us.anthropic.claude-haiku-4-5-20251001-v1:0')
 
 # DynamoDB Table
 table = dynamodb.Table(DYNAMODB_TABLE_NAME)
+
+
+def invoke_bedrock_with_retry(model_id: str, payload: dict, max_retries: int = 3) -> dict:
+    """
+    Invoke Bedrock with exponential backoff retry logic for throttling
+    """
+    for attempt in range(max_retries):
+        try:
+            response = bedrock_runtime.invoke_model(
+                modelId=model_id,
+                body=json.dumps(payload),
+                contentType="application/json",
+                accept="application/json"
+            )
+            return json.loads(response['body'].read())
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == 'ThrottlingException' and attempt < max_retries - 1:
+                # Exponential backoff: 1s, 2s, 4s
+                wait_time = (2 ** attempt) * 1
+                print(f"[app.py] Throttling detected, waiting {wait_time}s before retry {attempt + 1}/{max_retries}")
+                time.sleep(wait_time)
+            else:
+                raise
+    raise Exception("Max retries exceeded")
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -44,18 +72,37 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'error': 'Missing spotify_access_token. User must authenticate with Spotify first.'
             })
         
-        print(f"Processing request for user_id: {user_id}, prompt: {prompt}")
+        # Get limit parameter and clamp to avoid timeouts/rate limits
+        try:
+            limit = int(body.get('limit', 25))
+        except Exception:
+            limit = 25
+        effective_limit = max(1, min(limit, 40))
         
-        # Step 1: Interpret the prompt with Amazon Bedrock
-        music_parameters = interpret_prompt_with_bedrock(prompt)
+        print(f"Processing request for user_id: {user_id}, prompt: {prompt}, limit: {limit}, effective_limit: {effective_limit}")
+        
+        # Step 0.5: Use Amazon Q pattern to enhance the prompt before processing
+        enhanced_prompt = enhance_prompt_with_q_pattern(prompt)
+        print(f"Amazon Q enhanced prompt: {enhanced_prompt}")
+        
+        # Step 1: Interpret the enhanced prompt with Amazon Bedrock
+        music_parameters = interpret_prompt_with_bedrock(enhanced_prompt, effective_limit)
         print(f"Extracted music parameters: {music_parameters}")
         
         # Step 2: Search for tracks on Spotify
+        # Ensure we only search up to effective_limit songs
+        if isinstance(music_parameters, dict) and isinstance(music_parameters.get('songs'), list):
+            music_parameters['songs'] = music_parameters['songs'][:effective_limit]
         tracks = search_spotify_tracks(music_parameters, spotify_access_token)
         
         if not tracks:
+            # Return debug info to frontend to help diagnose (model, parameters, songs count)
             return create_response(404, {
-                'error': 'No tracks found matching the criteria'
+                'error': 'No tracks found matching the criteria',
+                'model_used': BEDROCK_MODEL_ID,
+                'parameters': music_parameters,
+                'ai_songs_count': len(music_parameters.get('songs', [])) if isinstance(music_parameters, dict) else 0,
+                'timestamp': datetime.utcnow().isoformat()
             })
         
         print(f"Found {len(tracks)} tracks")
@@ -73,98 +120,241 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Step 4: Save to DynamoDB
         save_playlist_to_dynamodb(user_id, playlist_url, prompt, music_parameters)
         
-        # Successful response
+        # Successful response with track list
         return create_response(200, {
             'message': 'Playlist created successfully',
             'playlist_url': playlist_url,
             'tracks_count': len(tracks),
-            'parameters': music_parameters
+            'tracks': tracks,  # Include full track list
+            'parameters': music_parameters,
+            'model_used': BEDROCK_MODEL_ID,  # Show which model was used
+            'timestamp': datetime.utcnow().isoformat(),  # Prevent caching
+            'requested_limit': limit,
+            'effective_limit': effective_limit
         })
         
     except Exception as e:
         print(f"Error processing request: {str(e)}")
         return create_response(500, {
-            'error': f'Internal server error: {str(e)}'
+            'error': f'Internal server error: {str(e)}',
+            'model_used': BEDROCK_MODEL_ID
         })
 
 
-def interpret_prompt_with_bedrock(prompt: str) -> Dict[str, Any]:
+def enhance_prompt_with_q_pattern(prompt: str) -> str:
     """
-    Uses Amazon Bedrock to interpret the user's prompt and extract musical parameters.
+    Use Amazon Q pattern to enhance and expand user prompt with more details
+    Makes prompts more specific for better playlist generation
     """
-    system_prompt = """You are a music expert who interprets user requests to create playlists.
-Analyze the user's prompt and suggest specific songs, artists, or search terms that match the request.
+    try:
+        q_prompt = f"""Analyze this music request and expand it with relevant details: "{prompt}"
 
-Return a JSON with these parameters:
+Add specifics about:
+- Specific artist examples in that style
+- Time period/era if relevant
+- Energy level and mood
+- Typical occasions for this music
+- Language if not specified
 
-- search_terms: list of 3-5 specific search queries (e.g., ["Coldplay Fix You", "Adele Someone Like You", "sad piano"])
-- genres: list of musical genres (e.g., ["pop", "rock", "electronic"]) - optional
-- mood: the mood (e.g., "happy", "sad", "energetic", "chill", "party")
-- energy: energy level from 0.0 to 1.0
-- danceability: how danceable from 0.0 to 1.0
-- valence: positivity from 0.0 to 1.0 (0 = sad, 1 = happy)
-- tempo: approximate tempo in BPM (optional)
-- popularity: minimum popularity from 0 to 100
-- playlist_name: suggested name for the playlist
-- limit: number of songs (default 20, maximum 50)
+Keep it concise (max 2-3 sentences). Be specific with artist names.
 
-IMPORTANT: Always provide search_terms with specific song names, artist names, or descriptive keywords.
-For example:
-- "music for studying" → ["lofi hip hop", "study beats", "ambient piano", "calm instrumental"]
-- "workout music" → ["Eye of the Tiger", "Lose Yourself Eminem", "pump up songs", "gym motivation"]
-- "relaxing music" → ["Weightless Marconi Union", "Clair de Lune", "ambient sleep", "meditation music"]
+Enhanced prompt:"""
 
-Respond ONLY with the JSON, without additional text."""
+        payload = {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 200,
+            "temperature": 0.7,
+            "messages": [
+                {"role": "user", "content": [{"type": "text", "text": q_prompt}]}
+            ]
+        }
+        
+        response = invoke_bedrock_with_retry(BEDROCK_MODEL_ID, payload, max_retries=1)
+        enhanced = response['content'][0]['text'].strip()
+        
+        print(f"🤖 Amazon Q enhanced: '{prompt}' → '{enhanced}'")
+        return enhanced
+        
+    except Exception as e:
+        print(f"⚠️ Amazon Q enhancement failed, using original prompt: {e}")
+        return prompt
 
-    user_message = f"Create a playlist based on: {prompt}"
+
+def interpret_prompt_with_bedrock(prompt: str, limit: int = 25, _retry_if_empty: bool = True, max_retries: int = 4) -> Dict[str, Any]:
+    """
+    Uses Amazon Bedrock to interpret the user's prompt and suggest specific songs.
+    """
+    print(f"🤖 Using Bedrock Model: {BEDROCK_MODEL_ID}")
     
-    # Prepare the payload for Claude 3
+    system_prompt = """You are a helpful assistant for creating music playlists. Interpret the user's request and return a strictly filtered list of songs that match ALL inferred constraints, without relying on any hardcoded artist, genre, or country lists.
+
+Return ONLY a JSON object with these keys:
+- songs: array of strings with exact format "Song Name - Artist Name"
+- playlist_name: string
+
+GENERAL RULES (apply all that match):
+1) If the user specifies artist(s) → include ONLY songs by those artist(s).
+2) If the user specifies a genre or subgenre → include ONLY songs of that genre/subgenre.
+3) If the user specifies a country/region or language → include ONLY artists that match that attribute.
+4) Do not substitute adjacent genres or subgenres (e.g., treat related styles as distinct unless the user allows it).
+5) For mixed constraints (e.g., genre + country + artist), respect ALL simultaneously.
+6) If uncertain whether a song satisfies ALL constraints, EXCLUDE it.
+
+VALIDATION CHECKLIST (must pass for every song):
+- Check that the artist and song align with the requested genre/subgenre (if specified).
+- Check that the artist's origin or language matches the requested country/region/language (if specified).
+- Remove any candidate that fails any constraint or seems doubtful.
+
+Output requirements:
+- Only JSON, no explanations, no markdown, no comments.
+- Use real, popular songs available on Spotify.
+"""
+
+    # Add timestamp to prevent caching
+    import time
+    request_id = int(time.time() * 1000)
+    
+    user_message = f"""[Request ID: {request_id}] Create a playlist with {limit} songs based on: "{prompt}"
+
+Process to follow (no prose in output):
+1) Extract constraints explicitly stated by the user (artist(s), genre/subgenre, country/region, language, era, mood, etc.).
+2) Propose candidates and FILTER OUT anything that violates ANY constraint.
+3) Validate each remaining song against ALL constraints. If uncertain, exclude it.
+4) Return ONLY strict JSON with keys: songs, playlist_name. No markdown, no extra text.
+
+Now create the playlist with {limit} songs:"""
+    
+    # Prepare the payload for Anthropic Messages API (Bedrock)
+    # Calculate required tokens based on limit (each song ~20 tokens)
+    # For 100 songs we need ~2500 tokens minimum
+    required_tokens = max(800, limit * 25 + 500)
+    
     payload = {
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1000,
+        "max_tokens": min(required_tokens, 4096),  # Cap at model limit
         "temperature": 0.7,
+        "system": system_prompt,
         "messages": [
             {
                 "role": "user",
-                "content": f"{system_prompt}\n\n{user_message}"
+                "content": [
+                    {"type": "text", "text": user_message}
+                ]
             }
         ]
     }
     
     try:
-        # Invoke Bedrock
-        response = bedrock_runtime.invoke_model(
-            modelId=BEDROCK_MODEL_ID,
-            body=json.dumps(payload)
-        )
-        
-        # Parse response
-        response_body = json.loads(response['body'].read())
-        content = response_body['content'][0]['text']
-        
-        # Extract JSON from the response
-        # Claude might return the JSON with or without markdown
-        if '```json' in content:
-            content = content.split('```json')[1].split('```')[0].strip()
-        elif '```' in content:
-            content = content.split('```')[1].split('```')[0].strip()
-        
-        music_params = json.loads(content)
-        
-        # Default values
-        defaults = {
-            'genres': ['pop'],
-            'mood': 'happy',
-            'energy': 0.5,
-            'danceability': 0.5,
-            'valence': 0.5,
-            'popularity': 50,
-            'playlist_name': 'AI DJ Playlist',
-            'limit': 20
-        }
-        
-        # Combine with defaults
-        return {**defaults, **music_params}
+        # Invoke Bedrock with retry logic
+        response_body = invoke_bedrock_with_retry(BEDROCK_MODEL_ID, payload, max_retries=max_retries)
+        print(f"Bedrock raw response keys: {list(response_body.keys())}")
+        if isinstance(response_body, dict):
+            print(f"Bedrock meta: model={response_body.get('model')} stop_reason={response_body.get('stop_reason')}")
+
+        # Try multiple ways to extract text content
+        content = None
+        try:
+            if isinstance(response_body.get('content'), list) and response_body['content']:
+                # Anthropic messages format
+                content = response_body['content'][0].get('text') or response_body['content'][0].get('content')
+        except Exception:
+            pass
+
+        # Some providers return 'output_text' directly
+        if not content and isinstance(response_body.get('output_text'), str):
+            content = response_body['output_text']
+
+        # Fallback: if body itself is a JSON with expected fields
+        if not content and ('songs' in response_body or 'playlist_name' in response_body):
+            music_params = {
+                'songs': response_body.get('songs', []),
+                'playlist_name': response_body.get('playlist_name', 'AI DJ Playlist')
+            }
+            return music_params
+
+        if not content and isinstance(response_body, dict):
+            # Last resort: stringify
+            content = json.dumps(response_body)
+
+        # Extract JSON from free-text content
+        text = content or ''
+        # First try direct JSON
+        music_params = None
+        try:
+            music_params = json.loads(text)
+        except Exception:
+            # Strip markdown fences
+            if '```json' in text:
+                text = text.split('```json', 1)[1].split('```', 1)[0].strip()
+            elif '```' in text:
+                text = text.split('```', 1)[1].split('```', 1)[0].strip()
+            # Try to locate first JSON object heuristically
+            if not (text.strip().startswith('{') and text.strip().endswith('}')):
+                # find first '{' and last '}'
+                start = text.find('{')
+                end = text.rfind('}')
+                if start != -1 and end != -1 and end > start:
+                    text = text[start:end+1]
+            try:
+                music_params = json.loads(text)
+            except Exception as ex:
+                print(f"Failed to parse AI content as JSON: {str(ex)} | content preview: {str((content or '') )[:400]}")
+                music_params = {}
+
+        # Ensure required fields
+        if 'songs' not in music_params:
+            music_params['songs'] = []
+        if 'playlist_name' not in music_params:
+            music_params['playlist_name'] = 'AI DJ Playlist'
+
+        # If no songs were produced, do a single JSON-enforcing retry
+        if _retry_if_empty and (not isinstance(music_params.get('songs'), list) or len(music_params.get('songs', [])) == 0):
+            print("No songs in AI response. Retrying with strict JSON-only instruction...")
+            strict_system = """You generate playlists. Return ONLY valid minified JSON, no markdown, no comments, no prose.
+Keys: songs (array of strings "Song - Artist"), playlist_name (string). Do not add extra keys. Do not wrap in backticks. Do not explain.
+If the user asked for genre or country, pick real, popular songs that exist on Spotify."""
+            strict_user = f"""Create a playlist with {limit} songs based on: \"{prompt}\". Return exactly:
+{{"songs": ["Song - Artist"], "playlist_name": "Name"}} and nothing else."""
+
+            strict_payload = {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 800,
+                "temperature": 0.3,
+                "system": strict_system,
+                "messages": [
+                    {"role": "user", "content": [{"type": "text", "text": strict_user}]}
+                ]
+            }
+
+            try:
+                strict_body = invoke_bedrock_with_retry(BEDROCK_MODEL_ID, strict_payload, max_retries=max_retries)
+                strict_text = None
+                if isinstance(strict_body.get('content'), list) and strict_body['content']:
+                    strict_text = strict_body['content'][0].get('text') or strict_body['content'][0].get('content')
+                if not strict_text and isinstance(strict_body.get('output_text'), str):
+                    strict_text = strict_body['output_text']
+                if not strict_text:
+                    strict_text = json.dumps(strict_body)
+                # Try direct JSON first, then remove fences if any
+                try:
+                    strict_params = json.loads(strict_text)
+                except Exception:
+                    if '```json' in strict_text:
+                        strict_text = strict_text.split('```json', 1)[1].split('```', 1)[0].strip()
+                    elif '```' in strict_text:
+                        strict_text = strict_text.split('```', 1)[1].split('```', 1)[0].strip()
+                    strict_params = json.loads(strict_text)
+
+                if 'songs' not in strict_params:
+                    strict_params['songs'] = []
+                if 'playlist_name' not in strict_params:
+                    strict_params['playlist_name'] = 'AI DJ Playlist'
+
+                music_params = strict_params
+            except Exception as rex:
+                print(f"Retry failed to produce songs: {str(rex)}")
+
+        return music_params
         
     except Exception as e:
         print(f"Error calling Bedrock: {str(e)}")
@@ -213,55 +403,34 @@ def get_spotify_client_token() -> Optional[str]:
 
 def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List[Dict[str, Any]]:
     """
-    Searches for tracks on Spotify using AI-suggested search terms.
+    Searches for specific songs on Spotify based on AI suggestions.
+    Returns track details including name, artist, and URI.
     """
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
     
-    search_terms = parameters.get('search_terms', [])
-    genres = parameters.get('genres', [])
-    mood = parameters.get('mood', '')
-    min_popularity = parameters.get('popularity', 30)  # Lower threshold
-    limit = min(parameters.get('limit', 20), 50)
+    songs = parameters.get('songs', [])
     
-    # Collect tracks from multiple searches
-    all_tracks_dict = {}  # Use dict to avoid duplicates by URI
+    if not songs:
+        print("No songs suggested by AI")
+        return []
     
-    # Build search queries
-    queries = []
+    print(f"Searching for {len(songs)} specific songs suggested by AI")
     
-    # Priority 1: AI-suggested search terms (BEST)
-    if search_terms:
-        queries.extend(search_terms[:5])
-        print(f"Using AI search terms: {search_terms[:5]}")
-    
-    # Priority 2: Genres
-    elif genres:
-        for genre in genres[:3]:
-            queries.append(f'genre:"{genre}"')
-        print(f"Using genres: {genres[:3]}")
-    
-    # Priority 3: Mood
-    elif mood:
-        queries.append(mood)
-        print(f"Using mood: {mood}")
-    
-    # Fallback: Recent popular music
-    else:
-        queries.append('year:2020-2024')
-        print("Using fallback: recent years")
-    
-    # Search with each query
+    # Search for each specific song
     search_url = 'https://api.spotify.com/v1/search'
+    found_tracks = []
     
-    for query in queries:
+    for song in songs:
         try:
-            print(f"Searching: {query}")
+            print(f"Searching for: {song}")
+            
+            # Search for the exact song
             search_params = {
-                'q': query,
+                'q': song,
                 'type': 'track',
-                'limit': 20,  # Get 20 per query
+                'limit': 1,  # Get only the best match
                 'market': 'US'
             }
             
@@ -269,35 +438,29 @@ def search_spotify_tracks(parameters: Dict[str, Any], access_token: str) -> List
             response.raise_for_status()
             tracks_data = response.json()
             
-            # Add tracks to collection (avoiding duplicates)
-            for track in tracks_data['tracks']['items']:
-                if track['uri'] not in all_tracks_dict and track['popularity'] >= min_popularity:
-                    all_tracks_dict[track['uri']] = {
-                        'uri': track['uri'],
-                        'name': track['name'],
-                        'artist': track['artists'][0]['name'],
-                        'popularity': track['popularity'],
-                        'id': track['id']
-                    }
-            
-            print(f"Found {len(tracks_data['tracks']['items'])} tracks for query: {query}")
+            # Get the first (best) result
+            if tracks_data['tracks']['items']:
+                track = tracks_data['tracks']['items'][0]
+                found_tracks.append({
+                    'uri': track['uri'],
+                    'name': track['name'],
+                    'artist': track['artists'][0]['name'],
+                    'popularity': track['popularity'],
+                    'id': track['id'],
+                    'album': track['album']['name'],
+                    'album_image': track['album']['images'][0]['url'] if track['album']['images'] else None
+                })
+                print(f"✓ Found: {track['name']} - {track['artists'][0]['name']}")
+            else:
+                print(f"✗ Not found: {song}")
             
         except Exception as e:
-            print(f"Error searching with query '{query}': {str(e)}")
+            print(f"Error searching for '{song}': {str(e)}")
             continue
     
-    if not all_tracks_dict:
-        print("No tracks found with any query")
-        return []
+    print(f"Successfully found {len(found_tracks)} out of {len(songs)} songs")
     
-    print(f"Total unique tracks collected: {len(all_tracks_dict)}")
-    
-    # Convert to list and sort by popularity
-    filtered_tracks = list(all_tracks_dict.values())
-    filtered_tracks.sort(key=lambda x: x['popularity'], reverse=True)
-    
-    # Return top tracks
-    return filtered_tracks[:limit]
+    return found_tracks
 
 
 def create_spotify_playlist(

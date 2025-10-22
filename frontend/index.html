@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI DJ - AI-Powered Playlist Generator</title>
+    <title>AI DJ - AI-Powered Playlist Generator | AWS Hackathon 2025</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="description" content="AI-powered music playlist generator using Amazon Bedrock, Nova Act, Amazon Q, and AgentCore">
     <style>
         * {
             margin: 0;
@@ -12,48 +14,134 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #232F3E 0%, #131A22 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%);
             min-height: 100vh;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
+            color: #F8FAFC;
+            letter-spacing: -0.01em;
+        }
+        
+        /* Top Navigation Bar */
+        .navbar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px) saturate(180%);
+            padding: 16px 0;
+            box-shadow: 0 4px 24px rgba(99, 102, 241, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
             color: #fff;
+        }
+        
+        .navbar-brand h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: #CBD5E1;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .nav-link:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: #A5B4FC;
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            color: #C7D2FE;
+            border: 1px solid rgba(99, 102, 241, 0.3);
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px 20px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 40px;
-            padding: 30px;
-            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            padding: 40px 30px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+            backdrop-filter: blur(16px);
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(255, 153, 0, 0.3);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.2);
         }
 
         .main-content {
-            background: rgba(35, 47, 62, 0.8);
-            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
             padding: 40px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             margin-bottom: 30px;
-            border: 1px solid rgba(255, 153, 0, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.15);
         }
 
         h1 {
-            color: #232F3E;
+            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
-            color: #b3b3b3;
+            color: #94A3B8;
             text-align: center;
             margin-bottom: 30px;
+            font-size: 16px;
+            font-weight: 400;
         }
 
         .input-group {
@@ -69,18 +157,22 @@
 
         input, textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #333;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            background: rgba(30, 27, 75, 0.5);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            color: #F8FAFC;
             font-size: 16px;
-            transition: border-color 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
         }
 
         input:focus, textarea:focus {
             outline: none;
-            border-color: #FF9900;
+            border-color: #6366F1;
+            background: rgba(30, 27, 75, 0.7);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         textarea {
@@ -89,23 +181,22 @@
         }
 
         button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            padding: 12px 30px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
             color: white;
             border: none;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
 
         button:hover {
-            background: linear-gradient(135deg, #EC7211 0%, #FF9900 100%);
+            background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
         }
 
         button:disabled {
@@ -122,8 +213,8 @@
         }
 
         .spinner {
-            border: 3px solid rgba(29, 185, 84, 0.3);
-            border-top: 3px solid #1DB954;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top: 3px solid #6366F1;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -139,15 +230,16 @@
         .result {
             display: none;
             margin-top: 30px;
-            padding: 20px;
-            background: rgba(29, 185, 84, 0.1);
-            border: 2px solid #1DB954;
-            border-radius: 10px;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
         }
 
         .result h3 {
-            color: #1DB954;
+            color: #A5B4FC;
             margin-bottom: 15px;
+            font-weight: 600;
         }
 
         .result p {
@@ -158,26 +250,123 @@
         .result a {
             display: inline-block;
             margin-top: 15px;
-            padding: 10px 20px;
-            background: #1DB954;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
             color: white;
             text-decoration: none;
-            border-radius: 20px;
-            transition: background 0.3s;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
         .result a:hover {
-            background: #1ed760;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
         }
 
         .error {
             display: none;
             margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 0, 0, 0.1);
-            border: 2px solid #ff4444;
-            border-radius: 10px;
-            color: #ff4444;
+            padding: 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            color: #FCA5A5;
+        }
+
+        /* Track Preview Styles */
+        .track-preview {
+            display: none;
+            margin-top: 30px;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+        }
+
+        .track-preview h3 {
+            color: #C7D2FE;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        #trackList {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .track-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.3s;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .track-number {
+            color: #A5B4FC;
+            font-weight: bold;
+            min-width: 30px;
+        }
+
+        .track-info {
+            flex: 1;
+        }
+
+        .track-name {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .track-artist {
+            color: #b3b3b3;
+            font-size: 14px;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .confirm-btn, .cancel-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .confirm-btn {
+            background: #1DB954;
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            background: #1ed760;
+            transform: translateY(-2px);
+        }
+
+        .cancel-btn {
+            background: #666;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: #888;
         }
 
         .info-box {
@@ -254,10 +443,117 @@
         .user-info {
             color: #fff;
             margin-top: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
 
         .hidden {
             display: none;
+        }
+        
+        /* Tab buttons */
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 153, 0, 0.3);
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 153, 0, 0.2);
+            border-color: #FF9900;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            border-color: #FF9900;
+        }
+        
+        /* Tab content sections */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Chat interface */
+        .chat-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        .chat-message.user {
+            background: rgba(255, 153, 0, 0.2);
+            margin-left: 20%;
+        }
+        
+        .chat-message.assistant {
+            background: rgba(29, 185, 84, 0.2);
+            margin-right: 20%;
+        }
+        
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .chat-input-group input {
+            flex: 1;
+        }
+        
+        .chat-input-group button {
+            width: auto;
+            padding: 12px 30px;
+        }
+        
+        /* Image upload */
+        .image-upload-area {
+            border: 2px dashed rgba(255, 153, 0, 0.5);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .image-upload-area:hover {
+            border-color: #FF9900;
+            background: rgba(255, 153, 0, 0.05);
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        
+        /* Knowledge section */
+        .knowledge-answer {
+            background: rgba(29, 185, 84, 0.1);
+            border-left: 4px solid #1DB954;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
         }
 
         /* Footer with tech logos */
@@ -436,15 +732,134 @@
                 font-size: 14px;
             }
         }
+        
+        /* Footer Styles */
+        .footer {
+            margin-top: 80px;
+            padding: 60px 20px 40px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            text-align: center;
+        }
+        
+        .footer-title {
+            background: linear-gradient(135deg, #A5B4FC 0%, #C7D2FE 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: -0.02em;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 50px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tech-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            padding: 24px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .tech-card:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
+        }
+        
+        .tech-name {
+            color: #E0E7FF;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+        
+        .tech-desc {
+            color: #94A3B8;
+            font-size: 13px;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .footer-info {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .footer-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: #A5B4FC;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+        
+        .footer-link:hover {
+            color: #C7D2FE;
+            background: rgba(99, 102, 241, 0.1);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 style="color: #000; margin: 0;">🎵 AI DJ</h1>
-            <p style="color: #000; margin-top: 10px; font-size: 18px;">Create personalized playlists with Artificial Intelligence</p>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-brand">
+                <div>
+                    <h1 style="margin-bottom: 2px;">AI DJ</h1>
+                    <p style="font-size: 11px; color: #94A3B8; margin: 0; font-weight: 400;">
+                        Powered by Amazon Bedrock • Nova Act • Amazon Q • AgentCore
+                    </p>
+                </div>
+            </a>
+            <div class="navbar-menu">
+                <a href="#" onclick="switchTab('classic'); return false;" class="nav-link active">
+                    Playlist
+                </a>
+                <a href="#" onclick="switchTab('chat'); return false;" class="nav-link">
+                    Chat Agent
+                </a>
+                <a href="#" onclick="switchTab('image'); return false;" class="nav-link">
+                    Image
+                </a>
+                <a href="#" onclick="switchTab('knowledge'); return false;" class="nav-link">
+                    Knowledge
+                </a>
+            </div>
         </div>
-
+    </nav>
+    
+    <div class="container">
         <div class="main-content">
 
         <div class="auth-section" id="authSection">
@@ -452,12 +867,19 @@
                 <p style="color: #fff; margin-bottom: 15px;">
                     <strong>🔐 Connect with Spotify</strong><br>
                     <span style="font-size: 14px; color: #b3b3b3;">
-                        You need to authorize the app to create real playlists
+                        Log in with your Spotify account to create AI-powered playlists
                     </span>
                 </p>
                 <button class="auth-btn" onclick="loginWithSpotify()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                    </svg>
                     Connect with Spotify
                 </button>
+                <p style="color: #b3b3b3; margin-top: 15px; font-size: 13px; text-align: center;">
+                    ⚠️ This app is in Spotify Development Mode<br>
+                    First-time users may need admin authorization
+                </p>
             </div>
             <div id="connected" class="hidden">
                 <p style="color: #1DB954; margin-bottom: 10px;">
@@ -468,8 +890,37 @@
                     Disconnect
                 </button>
             </div>
+
+            <div id="manualEmailPrompt" class="hidden">
+                <div style="background: rgba(255, 153, 0, 0.1); padding: 32px; border-radius: 14px; border: 1px solid rgba(255, 153, 0, 0.4); margin-top: 25px;">
+                    <h3 style="color: #FF9900; margin-bottom: 12px;">Action required to enable your account</h3>
+                    <p style="color: #f1f5f9; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+                        Spotify is blocking profile details because this app is still in development mode.<br>
+                        Please enter your email so an administrator can approve your access.
+                    </p>
+                    <form id="manualEmailForm" style="display: flex; flex-direction: column; gap: 12px;">
+                        <label for="manualEmailInput" style="color: #e2e8f0; font-size: 13px;">
+                            Email address
+                        </label>
+                        <input 
+                            type="email" 
+                            id="manualEmailInput" 
+                            name="manualEmailInput"
+                            placeholder="Enter the same email used for Spotify"
+                            required
+                            style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.7); color: #fff;"
+                        >
+                        <button type="submit" id="manualEmailSubmit" class="auth-btn" style="margin-top: 8px;">
+                            Submit email for approval
+                        </button>
+                    </form>
+                    <p id="manualEmailStatus" style="margin-top: 14px; font-size: 13px; color: #94A3B8;"></p>
+                </div>
+            </div>
         </div>
 
+        <!-- Classic Mode Tab -->
+        <div id="classicTab" class="tab-content active">
         <form id="playlistForm">
             <div class="input-group">
                 <label for="userId">Spotify User ID:</label>
@@ -485,6 +936,15 @@
                 required
             ></textarea>
 
+            <div class="input-group">
+                <label for="trackCount">Number of tracks:</label>
+                <select id="trackCount" name="trackCount">
+                    <option value="10">10 tracks</option>
+                    <option value="25" selected>25 tracks</option>
+                    <option value="40">40 tracks</option>
+                </select>
+            </div>
+
             <div class="examples">
                 <strong>💡 Examples:</strong>
                 <p onclick="setPrompt('Relaxing music for studying')">🎧 Relaxing music for studying</p>
@@ -498,7 +958,16 @@
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Creating your perfect playlist...</p>
+            <p id="loadingText">AI is suggesting songs...</p>
+        </div>
+
+        <div class="track-preview" id="trackPreview">
+            <h3>🎵 Suggested Tracks <span id="modelInfo" style="font-size: 0.7em; color: #FF9900; font-weight: normal;"></span></h3>
+            <div id="trackList"></div>
+            <div class="preview-actions">
+                <button type="button" id="confirmBtn" class="confirm-btn">✓ Create Playlist</button>
+                <button type="button" id="cancelBtn" class="cancel-btn">✗ Cancel</button>
+            </div>
         </div>
 
         <div class="result" id="result">
@@ -510,11 +979,117 @@
             <strong>❌ Error:</strong>
             <p id="errorMessage"></p>
         </div>
+        </div> <!-- Close classicTab -->
+        
+        <!-- AI Chat Tab (AgentCore) -->
+        <div id="chatTab" class="tab-content">
+            <h3 style="color: #FF9900; margin-bottom: 15px;">💬 Conversational Playlist Creation</h3>
+            <p style="color: #b3b3b3; margin-bottom: 20px;">Chat with AI to refine your playlist iteratively</p>
+            
+            <div class="chat-container" id="chatContainer">
+                <p style="color: #999; text-align: center;">Start a conversation to create your perfect playlist!</p>
+            </div>
+            
+            <div class="input-group">
+                <label for="chatTrackCount">Number of tracks:</label>
+                <select id="chatTrackCount" name="chatTrackCount">
+                    <option value="10">10 tracks</option>
+                    <option value="25" selected>25 tracks</option>
+                    <option value="40">40 tracks</option>
+                </select>
+            </div>
+            
+            <div class="chat-input-group">
+                <input type="text" id="chatInput" placeholder="E.g., I want energetic music for working out..." />
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+            
+            <div class="loading" id="chatLoading">
+                <div class="spinner"></div>
+                <p>AI is thinking...</p>
+            </div>
+        </div>
+        
+        <!-- Image Mode Tab (Nova Act) -->
+        <div id="imageTab" class="tab-content">
+            <h3 style="color: #FF9900; margin-bottom: 15px;">📸 Playlist from Image/Video</h3>
+            <p style="color: #b3b3b3; margin-bottom: 20px;">Upload an image and AI will create a playlist matching its vibe</p>
+            
+            <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+                <p style="font-size: 48px; margin: 0;">📸</p>
+                <p style="color: #FF9900; margin-top: 10px;">Click to upload image or drag & drop</p>
+                <p style="color: #999; font-size: 13px;">Supports JPG, PNG, GIF</p>
+            </div>
+            
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)" />
+            
+            <div id="imagePreviewContainer" class="hidden">
+                <img id="imagePreview" class="image-preview" />
+                
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="imageTrackCount">Number of tracks:</label>
+                    <select id="imageTrackCount" name="imageTrackCount">
+                        <option value="10">10 tracks</option>
+                        <option value="25" selected>25 tracks</option>
+                        <option value="40">40 tracks</option>
+                    </select>
+                </div>
+                
+                <button onclick="createPlaylistFromImage()" style="margin-top: 15px;">Generate Playlist from Image</button>
+            </div>
+            
+            <div class="loading" id="imageLoading">
+                <div class="spinner"></div>
+                <p id="imageLoadingText">Analyzing image...</p>
+            </div>
+            
+            <div class="result" id="imageResult">
+                <h3>✅ Playlist Created from Image!</h3>
+                <div id="imageResultContent"></div>
+            </div>
+            
+            <div class="error" id="imageError">
+                <strong>❌ Error:</strong>
+                <p id="imageErrorMessage"></p>
+            </div>
+        </div>
+        
+        <!-- Knowledge Tab (Amazon Q) -->
+        <div id="knowledgeTab" class="tab-content">
+            <h3 style="color: #FF9900; margin-bottom: 15px;">📚 Music Knowledge Base</h3>
+            <p style="color: #b3b3b3; margin-bottom: 20px;">Ask anything about music genres, artists, history, and more</p>
+            
+            <div class="input-group">
+                <label for="knowledgeQuery">Your question:</label>
+                <textarea 
+                    id="knowledgeQuery" 
+                    rows="3" 
+                    placeholder="E.g., What are the characteristics of progressive rock?"
+                ></textarea>
+            </div>
+            
+            <button onclick="askMusicKnowledge()">Ask AI Expert</button>
+            
+            <div class="loading" id="knowledgeLoading">
+                <div class="spinner"></div>
+                <p>Consulting music knowledge base...</p>
+            </div>
+            
+            <div class="knowledge-answer" id="knowledgeAnswer" style="display: none;">
+                <h4 style="color: #1DB954; margin-bottom: 15px;">Answer:</h4>
+                <div id="knowledgeAnswerContent"></div>
+            </div>
+            
+            <div class="error" id="knowledgeError">
+                <strong>❌ Error:</strong>
+                <p id="knowledgeErrorMessage"></p>
+            </div>
+        </div>
+        
         </div> <!-- Close main-content -->
 
         <!-- Tech Stack Footer -->
-        <div class="tech-footer">
-            <h3>Built With</h3>
+        <div class="tech-footer" style="display:none;">
             <div class="tech-logos">
                 <!-- AWS - Main Logo (Larger) -->
                 <div class="tech-logo" style="grid-column: span 2;">
@@ -617,6 +1192,9 @@
 
     <script>
         const API_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/playlist';
+        const AGENT_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/agent/chat';
+        const IMAGE_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/playlist-from-image';
+        const KNOWLEDGE_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/music-knowledge';
         
         // Configuración de Spotify OAuth
         const SPOTIFY_CLIENT_ID = 'b568dcea222848aab3697ec6ca4195b7';
@@ -627,27 +1205,208 @@
         // Almacenamiento del token
         let accessToken = null;
         let userProfile = null;
+        let manualEmailRequired = false;
+        let currentSessionId = null;
+        let uploadedImageData = null;
 
         function setPrompt(text) {
             document.getElementById('prompt').value = text;
         }
 
-        // Función para iniciar sesión con Spotify
-        function loginWithSpotify() {
-            // Detectar si es móvil
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            const authUrl = `https://accounts.spotify.com/authorize?${new URLSearchParams({
+        function isAndroid() {
+            return /Android/i.test(navigator.userAgent);
+        }
+
+        function isIOS() {
+            return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        }
+
+        function isInAppBrowser() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            return /(FBAN|FBAV|Instagram|Line|Line\/|TikTok)/i.test(ua);
+        }
+
+        function showInAppNotice(show) {
+            const el = document.getElementById('inAppNotice');
+            const text = document.getElementById('inAppText');
+            if (!el) return;
+            if (show) {
+                if (text) {
+                    if (isAndroid()) {
+                        text.textContent = 'Detected in-app browser (Facebook/Instagram). Tap Open in Browser to continue in Chrome.';
+                    } else if (isIOS()) {
+                        text.textContent = 'Detected in-app browser (Facebook/Instagram). Use Open in Browser or copy the link and open in Safari for Facebook login.';
+                    }
+                }
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function buildAuthorizeUrl() {
+            return `https://accounts.spotify.com/authorize?${new URLSearchParams({
                 client_id: SPOTIFY_CLIENT_ID,
                 response_type: 'code',
                 redirect_uri: REDIRECT_URI,
                 scope: SCOPES,
                 show_dialog: 'true'
             })}`;
+        }
+
+        function openInSystemBrowser() {
+            const authUrl = buildAuthorizeUrl();
+            if (isAndroid()) {
+                const intentUrl = `intent://accounts.spotify.com/authorize?${authUrl.split('?')[1]}#Intent;scheme=https;package=com.android.chrome;end`;
+                window.location.href = intentUrl;
+            } else {
+                // Try opening a new tab to allow handoff to Safari outside in-app browser
+                const w = window.open(authUrl, '_blank');
+                if (!w) {
+                    // Fallback
+                    window.location.href = authUrl;
+                }
+            }
+        }
+
+        function copyCurrentLink() {
+            const url = window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link copied. Open Safari/Chrome and paste it to continue.');
+                }).catch(() => {
+                    try { prompt('Copy this link:', url); } catch (e) {}
+                });
+            } else {
+                try { prompt('Copy this link:', url); } catch (e) {}
+            }
+        }
+
+        // ========================================
+        // Check Authorization Function
+        // ========================================
+        async function checkUserAuthorization(userProfile) {
+            console.log('🔐 Checking user authorization...');
+            console.log('🔐 Profile data:', userProfile);
             
-            // En móvil, abrir en la misma ventana para evitar problemas con la app
-            if (isMobile) {
-                window.location.href = authUrl;
+            // Validate userProfile exists
+            if (!userProfile || !userProfile.email) {
+                console.error('❌ Invalid user profile for authorization check');
+                console.error('❌ Profile:', userProfile);
+                console.error('❌ Email missing!');
+                return false;
+            }
+            
+            try {
+                console.log('🔐 Sending authorization check to API...');
+                console.log('📧 Email:', userProfile.email);
+                console.log('👤 Spotify ID:', userProfile.id);
+                
+                const response = await fetch('https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/check-authorization', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userProfile.email,
+                        spotify_id: userProfile.id,
+                        display_name: userProfile.display_name
+                    })
+                });
+                
+                console.log('🔐 API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to check authorization');
+                }
+                
+                const data = await response.json();
+                console.log('🔐 Authorization result:', data);
+                
+                if (!data.authorized) {
+                    console.log('⏳ User NOT authorized - showing pending message');
+                    // User not authorized - show message
+                    showAuthorizationPending(userProfile.email);
+                    return false;
+                }
+                
+                console.log('✅ User authorized!');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Authorization check error:', error);
+                // Show a user-friendly error message
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <div style="max-width: 600px; margin: 60px auto; text-align: center;">
+                        <div style="background: rgba(255, 107, 107, 0.1); padding: 40px; border-radius: 16px; border: 2px solid rgba(255, 107, 107, 0.3);">
+                            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                            <h2 style="color: #ff6b6b; margin-bottom: 20px;">Connection Error</h2>
+                            <p style="color: #fff; margin-bottom: 15px; font-size: 16px; line-height: 1.6;">
+                                Unable to verify your authorization status.
+                            </p>
+                            <p style="color: #b3b3b3; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
+                                This could be a temporary network issue. Please try again in a few moments.
+                            </p>
+                            <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; border-radius: 8px; color: #ff6b6b; cursor: pointer; font-weight: 600;">
+                                🔄 Retry
+                            </button>
+                            <button onclick="logout()" style="margin-top: 20px; margin-left: 10px; padding: 12px 24px; background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; border-radius: 8px; color: #FF9900; cursor: pointer; font-weight: 600;">
+                                🚪 Disconnect
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return false;
+            }
+        }
+        
+        function showAuthorizationPending(email) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Show authorization pending message
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div style="max-width: 600px; margin: 60px auto; text-align: center;">
+                    <div style="background: rgba(255, 153, 0, 0.1); padding: 40px; border-radius: 16px; border: 2px solid rgba(255, 153, 0, 0.3);">
+                        <div style="font-size: 60px; margin-bottom: 20px;">⏳</div>
+                        <h2 style="color: #FF9900; margin-bottom: 20px;">Authorization Pending</h2>
+                        <p style="color: #fff; margin-bottom: 15px; font-size: 16px; line-height: 1.6;">
+                            Your account <strong>${email}</strong> has been registered but is awaiting administrator approval.
+                        </p>
+                        <p style="color: #b3b3b3; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
+                            You will be able to use the application once the administrator approves your account.<br>
+                            This usually takes 24-48 hours.
+                        </p>
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; margin-top: 20px;">
+                            <p style="color: #FF9900; margin-bottom: 10px; font-weight: 600;">Need immediate access?</p>
+                            <p style="color: #b3b3b3; font-size: 13px;">
+                                Contact the administrator at: <a href="mailto:dlucchelli@gmail.com" style="color: #1DB954;">dlucchelli@gmail.com</a>
+                            </p>
+                        </div>
+                        <button onclick="logout()" style="margin-top: 30px; padding: 12px 24px; background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; border-radius: 8px; color: #FF9900; cursor: pointer; font-weight: 600;">
+                            🚪 Disconnect
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Función para iniciar sesión con Spotify
+        function loginWithSpotify() {
+            const authUrl = buildAuthorizeUrl();
+            const inApp = isInAppBrowser();
+            showInAppNotice(inApp);
+            if (inApp && isAndroid()) {
+                const intentUrl = `intent://accounts.spotify.com/authorize?${authUrl.split('?')[1]}#Intent;scheme=https;package=com.android.chrome;end`;
+                window.location.href = intentUrl;
+                return;
+            }
+            if (inApp && isIOS()) {
+                // Attempt to open a new tab (possible handoff to Safari). If blocked, keep notice visible.
+                const w = window.open(authUrl, '_blank');
+                if (!w) return;
             } else {
                 window.location.href = authUrl;
             }
@@ -669,7 +1428,30 @@
             const connected = document.getElementById('connected');
             const authSection = document.getElementById('authSection');
             const submitBtn = document.getElementById('submitBtn');
+            const userInfo = document.getElementById('userInfo');
+            const manualEmailPrompt = document.getElementById('manualEmailPrompt');
             
+            console.log('🔄 Updating UI. Access token exists:', !!accessToken);
+            
+            if (manualEmailRequired) {
+                console.log('🟠 Manual email required state active');
+                notConnected.classList.add('hidden');
+                if (connected) connected.classList.add('hidden');
+                authSection.classList.add('connected');
+                submitBtn.disabled = true;
+                if (manualEmailPrompt) {
+                    manualEmailPrompt.classList.remove('hidden');
+                }
+                if (userInfo) {
+                    userInfo.textContent = '';
+                }
+                return;
+            }
+
+            if (manualEmailPrompt) {
+                manualEmailPrompt.classList.add('hidden');
+            }
+
             if (accessToken) {
                 notConnected.classList.add('hidden');
                 connected.classList.remove('hidden');
@@ -677,20 +1459,54 @@
                 submitBtn.disabled = false;
                 
                 if (userProfile) {
-                    document.getElementById('userInfo').textContent = 
-                        `User: ${userProfile.display_name || userProfile.id}`;
+                    console.log('👤 User profile in updateAuthUI:', userProfile);
+                    const displayName = userProfile.display_name || userProfile.id || userProfile.email || 'Spotify User';
+                    userInfo.textContent = `User: ${displayName}`;
+                    
+                    if (!userProfile.display_name) {
+                        console.log('ℹ️ No display name, refetching profile...');
+                        getUserProfile(accessToken).then(updatedProfile => {
+                            if (updatedProfile && updatedProfile.display_name) {
+                                console.log('✅ Display name fetched later:', updatedProfile.display_name);
+                                userInfo.textContent = `User: ${updatedProfile.display_name}`;
+                                userProfile = updatedProfile;
+                                localStorage.setItem('spotify_user_profile', JSON.stringify(updatedProfile));
+                            }
+                        });
+                    }
+                } else {
+                    console.log('ℹ️ No user profile available, fetching...');
+                    getUserProfile(accessToken).then(profile => {
+                        if (profile) {
+                            const nameToShow = profile.display_name || profile.id || profile.email || 'Spotify User';
+                            userInfo.textContent = `User: ${nameToShow}`;
+                            userProfile = profile;
+                            localStorage.setItem('spotify_user_profile', JSON.stringify(profile));
+                            if (manualEmailPrompt) {
+                                manualEmailPrompt.classList.add('hidden');
+                            }
+                        }
+                    });
                 }
             } else {
+                console.log('🔴 No access token, showing not connected state');
                 notConnected.classList.remove('hidden');
                 connected.classList.add('hidden');
                 authSection.classList.remove('connected');
                 submitBtn.disabled = true;
+                if (userInfo) {
+                    userInfo.textContent = '';
+                }
+                if (manualEmailPrompt) {
+                    manualEmailPrompt.classList.add('hidden');
+                }
             }
         }
 
         // Obtener perfil del usuario
         async function getUserProfile(token) {
             try {
+                console.log('🔍 Fetching user profile from Spotify API...');
                 const response = await fetch('https://api.spotify.com/v1/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -698,27 +1514,137 @@
                 });
                 
                 if (response.ok) {
-                    return await response.json();
+                    const profile = await response.json();
+                    console.log('✅ Profile received:', JSON.stringify(profile, null, 2));
+                    console.log('📧 Email:', profile.email || 'NOT PROVIDED');
+                    console.log('👤 ID:', profile.id);
+                    console.log('📝 Display Name:', profile.display_name);
+                    manualEmailRequired = false;
+                    return profile;
+                } else if (response.status === 403) {
+                    const errorText = await response.text();
+                    let errorData = null;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (parseError) {
+                        console.error('❌ Failed to parse Spotify error response:', parseError);
+                    }
+                    console.error('🚫 Spotify profile access forbidden (403):', errorData || errorText);
+                    const error = new Error(errorData?.error?.message || 'Spotify is denying access to this account for this application.');
+                    error.code = 'spotify_403';
+                    error.details = errorData;
+                    manualEmailRequired = true;
+                    const manualEmailPrompt = document.getElementById('manualEmailPrompt');
+                    const connected = document.getElementById('connected');
+                    if (manualEmailPrompt && connected) {
+                        console.log('🔔 Showing manual email prompt due to Spotify 403');
+                        manualEmailPrompt.classList.remove('hidden');
+                        connected.classList.add('hidden');
+                        const status = document.getElementById('manualEmailStatus');
+                        if (status) {
+                            status.textContent = 'We could not retrieve your profile automatically. Please enter your email to continue.';
+                            status.style.color = '#94A3B8';
+                        }
+                    }
+                    updateAuthUI();
+                    return null;
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Profile fetch failed:', response.status, response.statusText, errorText);
                 }
             } catch (error) {
-                console.error('Error getting user profile:', error);
+                console.error('❌ Error getting user profile:', error);
+                if (error.code === 'spotify_403') {
+                    manualEmailRequired = true;
+                    updateAuthUI();
+                    return null;
+                }
+                throw error;
             }
             return null;
         }
 
+        async function submitManualEmail(reqEmail) {
+            const payload = {
+                email: reqEmail,
+                source: 'manual_email_prompt',
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                spotify_id: userProfile?.id || null,
+                session_id: currentSessionId,
+                display_name: userProfile?.display_name || null
+            };
+            console.log('📨 Sending manual email registration:', payload);
+            const response = await fetch(API_BASE + '/manual-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`Manual email registration failed: ${response.status} ${text}`);
+            }
+            return await response.json();
+        }
+
+        (function setupManualEmailForm() {
+            const manualEmailForm = document.getElementById('manualEmailForm');
+            if (!manualEmailForm) {
+                return;
+            }
+            manualEmailForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const submitBtn = document.getElementById('manualEmailSubmit');
+                const status = document.getElementById('manualEmailStatus');
+                const emailInput = document.getElementById('manualEmailInput');
+                if (!emailInput || !emailInput.value) {
+                    status.textContent = 'Please enter a valid email address.';
+                    status.style.color = '#f87171';
+                    return;
+                }
+                const email = emailInput.value.trim().toLowerCase();
+                status.textContent = '';
+                status.style.color = '#94A3B8';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                try {
+                    const result = await submitManualEmail(email);
+                    console.log('✅ Manual email stored:', result);
+                    status.textContent = 'Thank you! Your email has been registered. An admin will contact you soon.';
+                    status.style.color = '#38bdf8';
+                    manualEmailForm.reset();
+                } catch (err) {
+                    console.error('❌ Error submitting manual email:', err);
+                    status.textContent = 'We could not register your email. Please try again or contact support.';
+                    status.style.color = '#f87171';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit email for approval';
+                }
+            });
+        })();
+
         // Verificar si hay token guardado o en el hash
         async function checkForToken() {
-            console.log('Checking for token...');
+            console.log('🔍 Checking for token...');
+            console.log('🔍 Current URL:', window.location.href);
+            console.log('🔍 Current hash:', window.location.hash);
             
             // Primero verificar si hay token en el hash (callback de OAuth)
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(hash);
             
+            console.log('🔍 Hash params:', Array.from(params.entries()));
+            
             if (params.has('access_token')) {
-                console.log('Token found in URL hash');
+                console.log('✅ Token found in URL hash');
+                console.log('🔑 Token length:', params.get('access_token').length);
                 accessToken = params.get('access_token');
                 const expiresIn = parseInt(params.get('expires_in') || '3600');
                 const expiryTime = Date.now() + (expiresIn * 1000);
+                console.log('⏱️ Token expires in:', expiresIn, 'seconds');
                 
                 // Guardar en localStorage
                 localStorage.setItem('spotify_access_token', accessToken);
@@ -731,6 +1657,12 @@
                     localStorage.setItem('spotify_user_profile', JSON.stringify(userProfile));
                     document.getElementById('userId').value = userProfile.id;
                     console.log('Profile fetched:', userProfile.id);
+                    
+                    // Check authorization
+                    const isAuthorized = await checkUserAuthorization(userProfile);
+                    if (!isAuthorized) {
+                        return; // Stop here, authorization pending message is shown
+                    }
                 }
                 
                 // Limpiar la URL
@@ -755,6 +1687,12 @@
                     userProfile = JSON.parse(savedProfile);
                     document.getElementById('userId').value = userProfile.id;
                     console.log('Profile loaded from storage:', userProfile.id);
+                    
+                    // Check authorization
+                    const isAuthorized = await checkUserAuthorization(userProfile);
+                    if (!isAuthorized) {
+                        return; // Stop here, authorization pending message is shown
+                    }
                 } else {
                     // Obtener perfil si no está guardado
                     console.log('Fetching user profile...');
@@ -763,6 +1701,12 @@
                         localStorage.setItem('spotify_user_profile', JSON.stringify(userProfile));
                         document.getElementById('userId').value = userProfile.id;
                         console.log('Profile fetched:', userProfile.id);
+                        
+                        // Check authorization
+                        const isAuthorized = await checkUserAuthorization(userProfile);
+                        if (!isAuthorized) {
+                            return; // Stop here, authorization pending message is shown
+                        }
                     }
                 }
                 updateAuthUI();
@@ -779,23 +1723,33 @@
         // Inicializar al cargar la página
         window.addEventListener('load', checkForToken);
 
+        // Variable global para guardar los tracks sugeridos
+        let suggestedTracks = [];
+        let currentPlaylistData = null;
+
         document.getElementById('playlistForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const userId = document.getElementById('userId').value;
             const prompt = document.getElementById('prompt').value;
+            const trackCount = parseInt(document.getElementById('trackCount').value);
             const submitBtn = document.getElementById('submitBtn');
             const loading = document.getElementById('loading');
+            const trackPreview = document.getElementById('trackPreview');
             const result = document.getElementById('result');
             const error = document.getElementById('error');
             
             // Reset
             result.style.display = 'none';
             error.style.display = 'none';
+            trackPreview.style.display = 'none';
             loading.style.display = 'block';
             submitBtn.disabled = true;
             
             try {
+                console.log('🚀 Sending request to:', API_ENDPOINT);
+                console.log('📝 Request body:', { user_id: userId, prompt: prompt, limit: trackCount });
+                
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: {
@@ -804,40 +1758,52 @@
                     body: JSON.stringify({
                         user_id: userId,
                         prompt: prompt,
+                        limit: trackCount,
                         spotify_access_token: accessToken
                     })
                 });
                 
+                console.log('📡 Response status:', response.status);
+                
                 const data = await response.json();
+                
+                console.log('📦 Response data:', data);
+                console.log('🤖 Model used:', data.model_used);
+                console.log('⏰ Timestamp:', data.timestamp);
                 
                 loading.style.display = 'none';
                 
                 if (response.ok) {
-                    // Success
-                    const spotifyUrl = data.playlist_url;
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    // Show track preview
+                    suggestedTracks = data.tracks || [];
+                    currentPlaylistData = data;
                     
-                    // Convert web URL to app URL for mobile
-                    let finalUrl = spotifyUrl;
-                    if (isMobile && spotifyUrl) {
-                        // Extract playlist ID from URL
-                        const playlistId = spotifyUrl.split('/playlist/')[1]?.split('?')[0];
-                        if (playlistId) {
-                            finalUrl = `spotify:playlist:${playlistId}`;
-                        }
+                    if (suggestedTracks.length === 0) {
+                        error.style.display = 'block';
+                        document.getElementById('errorMessage').textContent = 'No tracks found. Try a different prompt.';
+                        return;
                     }
                     
-                    document.getElementById('resultContent').innerHTML = `
-                        <p><strong>Playlist:</strong> ${data.parameters.playlist_name}</p>
-                        <p><strong>Genres:</strong> ${data.parameters.genres?.join(', ') || 'Mixed'}</p>
-                        <p><strong>Mood:</strong> ${data.parameters.mood || 'N/A'}</p>
-                        <p><strong>Energy:</strong> ${(data.parameters.energy * 100).toFixed(0)}%</p>
-                        <p><strong>Danceability:</strong> ${(data.parameters.danceability * 100).toFixed(0)}%</p>
-                        <p><strong>Positivity:</strong> ${(data.parameters.valence * 100).toFixed(0)}%</p>
-                        <p><strong>Tracks:</strong> ${data.tracks_count}</p>
-                        ${spotifyUrl ? `<a href="${finalUrl}" target="_blank">🎵 Open in Spotify ${isMobile ? 'App' : ''}</a>` : ''}
-                    `;
-                    result.style.display = 'block';
+                    // Display model info
+                    const modelInfo = document.getElementById('modelInfo');
+                    if (data.model_used) {
+                        const modelName = data.model_used.split('.')[1] || data.model_used;
+                        modelInfo.textContent = `(${modelName})`;
+                    }
+                    
+                    // Display track list
+                    const trackList = document.getElementById('trackList');
+                    trackList.innerHTML = suggestedTracks.map((track, index) => `
+                        <div class="track-item">
+                            <div class="track-number">${index + 1}</div>
+                            <div class="track-info">
+                                <div class="track-name">${track.name}</div>
+                                <div class="track-artist">${track.artist}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    trackPreview.style.display = 'block';
                 } else {
                     // Error
                     document.getElementById('errorMessage').textContent = data.error || 'Unknown error';
@@ -851,6 +1817,543 @@
                 submitBtn.disabled = false;
             }
         });
+
+        // Confirm button - show final result
+        document.getElementById('confirmBtn').addEventListener('click', () => {
+            const trackPreview = document.getElementById('trackPreview');
+            const result = document.getElementById('result');
+            
+            trackPreview.style.display = 'none';
+            
+            const spotifyUrl = currentPlaylistData.playlist_url;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Convert web URL to app URL for mobile
+            let finalUrl = spotifyUrl;
+            if (isMobile && spotifyUrl) {
+                const playlistId = spotifyUrl.split('/playlist/')[1]?.split('?')[0];
+                if (playlistId) {
+                    finalUrl = `spotify:playlist:${playlistId}`;
+                }
+            }
+            
+            document.getElementById('resultContent').innerHTML = `
+                <p><strong>Playlist:</strong> ${currentPlaylistData.parameters.playlist_name}</p>
+                <p><strong>Tracks:</strong> ${currentPlaylistData.tracks_count}</p>
+                ${spotifyUrl ? `<a href="${finalUrl}" target="_blank">🎵 Open in Spotify ${isMobile ? 'App' : ''}</a>` : ''}
+            `;
+            result.style.display = 'block';
+        });
+
+        // Cancel button
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            document.getElementById('trackPreview').style.display = 'none';
+            suggestedTracks = [];
+            currentPlaylistData = null;
+        });
+
+        // ========================================
+        // Tab Switching
+        // ========================================
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Update navbar links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (!link.href.includes('linkedin')) {
+                    link.classList.remove('active');
+                }
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            const tabBtn = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            if (tabBtn) tabBtn.classList.add('active');
+            
+            // Highlight active nav link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(tabName)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // ========================================
+        // AI Chat (AgentCore)
+        // ========================================
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            if (!accessToken) {
+                alert('Please connect with Spotify first');
+                return;
+            }
+            
+            const container = document.getElementById('chatContainer');
+            const loading = document.getElementById('chatLoading');
+            
+            // Add user message to chat
+            container.innerHTML += `
+                <div class="chat-message user">
+                    <strong>You:</strong> ${message}
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+            
+            input.value = '';
+            loading.style.display = 'block';
+            
+            try {
+                if (!currentSessionId) {
+                    currentSessionId = 'session-' + Date.now();
+                }
+                
+                const trackCount = parseInt(document.getElementById('chatTrackCount').value);
+                
+                const response = await fetch(AGENT_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userProfile.id,
+                        message: message,
+                        session_id: currentSessionId,
+                        spotify_access_token: accessToken,
+                        limit: trackCount
+                    })
+                });
+                
+                const data = await response.json();
+                loading.style.display = 'none';
+                
+                if (response.ok) {
+                    // Check if playlist was created
+                    if (data.playlist_created && data.playlist_url) {
+                        container.innerHTML += `
+                            <div class="chat-message assistant" style="background: rgba(29, 185, 84, 0.3);">
+                                <strong>AI DJ:</strong> ${data.message}<br><br>
+                                <strong>Tracks:</strong> ${data.tracks_count}<br>
+                                <a href="${data.playlist_url}" target="_blank" style="color: #1DB954; font-weight: bold;">
+                                    🎵 Open Playlist in Spotify
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML += `
+                            <div class="chat-message assistant">
+                                <strong>AI DJ:</strong> ${data.message}
+                            </div>
+                        `;
+                    }
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    console.error('Chat error response:', data);
+                    const errorMsg = data.error || data.message || JSON.stringify(data) || 'Unknown error';
+                    container.innerHTML += `
+                        <div class="chat-message assistant" style="background: rgba(255, 0, 0, 0.2);">
+                            <strong>Error:</strong> ${errorMsg}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                container.innerHTML += `
+                    <div class="chat-message assistant" style="background: rgba(255, 0, 0, 0.2);">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Allow Enter key to send message
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+
+        async function createPlaylistFromChat(playlistData) {
+            // Use existing playlist creation logic
+            alert('Creating playlist: ' + playlistData.playlist_name);
+            // TODO: Implement actual playlist creation from chat data
+        }
+
+        // ========================================
+        // Image Upload (Nova Act)
+        // ========================================
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImageData = e.target.result.split(',')[1]; // Get base64 data
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function createPlaylistFromImage() {
+            if (!uploadedImageData) {
+                alert('Please upload an image first');
+                return;
+            }
+            
+            if (!accessToken) {
+                alert('Please connect with Spotify first');
+                return;
+            }
+            
+            const loading = document.getElementById('imageLoading');
+            const result = document.getElementById('imageResult');
+            const error = document.getElementById('imageError');
+            
+            result.style.display = 'none';
+            error.style.display = 'none';
+            loading.style.display = 'block';
+            
+            try {
+                const trackCount = parseInt(document.getElementById('imageTrackCount').value);
+                
+                const response = await fetch(IMAGE_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userProfile.id,
+                        image_data: uploadedImageData,
+                        spotify_access_token: accessToken,
+                        limit: trackCount
+                    })
+                });
+                
+                const data = await response.json();
+                loading.style.display = 'none';
+                
+                if (response.ok) {
+                    // Show tracks like in classic mode
+                    const mood = data.mood_analysis;
+                    const tracks = data.tracks || [];
+                    
+                    let content = '<h3>🎵 Playlist Created from Image!</h3>';
+                    
+                    if (mood.detected_person) {
+                        content += `<p><strong>🎤 Detected:</strong> ${mood.detected_person}</p>`;
+                    }
+                    
+                    if (mood.visual_theme && mood.visual_theme !== 'Unknown') {
+                        content += `<p><strong>🎨 Theme:</strong> ${mood.visual_theme}</p>`;
+                    }
+                    
+                    // Show track list
+                    content += `<h4 style="margin-top: 20px;">Tracks (${tracks.length}):</h4>`;
+                    content += '<div style="max-height: 300px; overflow-y: auto; margin: 10px 0;">';
+                    tracks.forEach((track, index) => {
+                        content += `
+                            <div style="padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                <strong>${index + 1}.</strong> ${track.name} - ${track.artist}
+                            </div>
+                        `;
+                    });
+                    content += '</div>';
+                    
+                    // Add Spotify link
+                    if (data.playlist_url) {
+                        content += `
+                            <a href="${data.playlist_url}" target="_blank" 
+                               style="display: inline-block; margin-top: 15px; padding: 12px 30px; 
+                                      background: #1DB954; color: white; text-decoration: none; 
+                                      border-radius: 25px; font-weight: bold;">
+                                🎵 Open in Spotify
+                            </a>
+                        `;
+                    }
+                    
+                    document.getElementById('imageResultContent').innerHTML = content;
+                    result.style.display = 'block';
+                } else {
+                    document.getElementById('imageErrorMessage').textContent = data.error || 'Unknown error';
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                document.getElementById('imageErrorMessage').textContent = err.message;
+                error.style.display = 'block';
+            }
+        }
+
+        // ========================================
+        // Music Knowledge (Amazon Q)
+        // ========================================
+        async function askMusicKnowledge() {
+            const query = document.getElementById('knowledgeQuery').value.trim();
+            if (!query) {
+                alert('Please enter a question');
+                return;
+            }
+            
+            const loading = document.getElementById('knowledgeLoading');
+            const answer = document.getElementById('knowledgeAnswer');
+            const error = document.getElementById('knowledgeError');
+            
+            answer.style.display = 'none';
+            error.style.display = 'none';
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch(KNOWLEDGE_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userProfile?.id || 'anonymous',
+                        query: query
+                    })
+                });
+                
+                const data = await response.json();
+                loading.style.display = 'none';
+                
+                if (response.ok) {
+                    let content = `<p>${data.answer}</p>`;
+                    
+                    if (data.context) {
+                        content += `<h5 style="color: #FF9900; margin-top: 15px;">Context:</h5><p>${data.context}</p>`;
+                    }
+                    
+                    if (data.examples && data.examples.length > 0) {
+                        content += `<h5 style="color: #FF9900; margin-top: 15px;">Examples:</h5><ul>`;
+                        data.examples.forEach(ex => {
+                            content += `<li>${ex}</li>`;
+                        });
+                        content += `</ul>`;
+                    }
+                    
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        content += `<h5 style="color: #FF9900; margin-top: 15px;">Suggestions:</h5><ul>`;
+                        data.suggestions.forEach(s => {
+                            content += `<li>${s}</li>`;
+                        });
+                        content += `</ul>`;
+                    }
+                    
+                    document.getElementById('knowledgeAnswerContent').innerHTML = content;
+                    answer.style.display = 'block';
+                } else {
+                    document.getElementById('knowledgeErrorMessage').textContent = data.error || 'Unknown error';
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                document.getElementById('knowledgeErrorMessage').textContent = err.message;
+                error.style.display = 'block';
+            }
+        }
     </script>
+    
+    <!-- Footer with Technologies -->
+    <footer class="footer">
+        <h3 class="footer-title">Powered by Modern Technologies</h3>
+        <div class="tech-grid">
+            <!-- AWS -->
+            <a href="https://aws.amazon.com/bedrock/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 304 182" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M86.4 66.4c0 3.7.4 6.7 1.1 8.9.8 2.2 1.8 4.6 3.2 7.2.5.8.7 1.6.7 2.3 0 1-.6 2-1.9 3l-6.3 4.2c-.9.6-1.8.9-2.6.9-1 0-2-.5-3-1.4-1.4-1.5-2.6-3.1-3.6-4.7-1-1.7-2-3.6-3.1-5.9-7.8 9.2-17.6 13.8-29.4 13.8-8.4 0-15.1-2.4-20-7.2-4.9-4.8-7.4-11.2-7.4-19.2 0-8.5 3-15.4 9.1-20.6 6.1-5.2 14.2-7.8 24.5-7.8 3.4 0 6.9.3 10.6.8 3.7.5 7.5 1.3 11.5 2.2v-7.3c0-7.6-1.6-12.9-4.7-16-3.2-3.1-8.6-4.6-16.3-4.6-3.5 0-7.1.4-10.8 1.3-3.7.9-7.3 2-10.8 3.4-1.6.7-2.8 1.1-3.5 1.3-.7.2-1.2.3-1.6.3-1.4 0-2.1-1-2.1-3.1v-4.9c0-1.6.2-2.8.7-3.5.5-.7 1.4-1.4 2.8-2.1 3.5-1.8 7.7-3.3 12.6-4.5 4.9-1.3 10.1-1.9 15.6-1.9 11.9 0 20.6 2.7 26.2 8.1 5.5 5.4 8.3 13.6 8.3 24.6v32.4zm-40.6 15.2c3.3 0 6.7-.6 10.3-1.8 3.6-1.2 6.8-3.4 9.5-6.4 1.6-1.9 2.8-4 3.4-6.4.6-2.4 1-5.3 1-8.7v-4.2c-2.9-.7-6-1.3-9.2-1.7-3.2-.4-6.3-.6-9.4-.6-6.7 0-11.6 1.3-14.9 4-3.3 2.7-4.9 6.5-4.9 11.5 0 4.7 1.2 8.2 3.7 10.6 2.4 2.5 5.9 3.7 10.5 3.7zm80.3 10.8c-1.8 0-3-.3-3.8-1-.8-.6-1.5-2-2.1-3.9L96.7 10.2c-.6-2-.9-3.3-.9-4 0-1.6.8-2.5 2.4-2.5h9.8c1.9 0 3.2.3 3.9 1 .8.6 1.4 2 2 3.9l16.8 66.2 15.6-66.2c.5-2 1.1-3.3 1.9-3.9.8-.6 2.2-1 4-1h8c1.9 0 3.2.3 4 1 .8.6 1.5 2 1.9 3.9l15.8 67 17.3-67c.6-2 1.3-3.3 2-3.9.8-.6 2.1-1 3.9-1h9.3c1.6 0 2.5.8 2.5 2.5 0 .5-.1 1-.2 1.6-.1.6-.3 1.4-.7 2.5l-24.1 77.3c-.6 2-1.3 3.3-2.1 3.9-.8.6-2.1 1-3.8 1h-8.6c-1.9 0-3.2-.3-4-1-.8-.7-1.5-2-1.9-4L156 23l-15.4 64.4c-.5 2-1.1 3.3-1.9 4-.8.7-2.2 1-4 1h-8.6zm128.5 2.7c-5.2 0-10.4-.6-15.4-1.8-5-1.2-8.9-2.5-11.5-4-1.6-.9-2.7-1.9-3.1-2.8-.4-.9-.6-1.9-.6-2.8v-5.1c0-2.1.8-3.1 2.3-3.1.6 0 1.2.1 1.8.3.6.2 1.5.6 2.5 1 3.4 1.5 7.1 2.7 11 3.5 4 .8 7.9 1.2 11.9 1.2 6.3 0 11.2-1.1 14.6-3.3 3.4-2.2 5.2-5.4 5.2-9.5 0-2.8-.9-5.1-2.7-7-1.8-1.9-5.2-3.6-10.1-5.2L246 52c-7.3-2.3-12.7-5.7-16-10.2-3.3-4.4-5-9.3-5-14.5 0-4.2.9-7.9 2.7-11.1 1.8-3.2 4.2-6 7.2-8.2 3-2.3 6.4-4 10.4-5.2 4-1.2 8.2-1.7 12.6-1.7 2.2 0 4.5.1 6.7.4 2.3.3 4.4.7 6.5 1.1 2 .5 3.9 1 5.7 1.6 1.8.6 3.2 1.2 4.2 1.8 1.4.8 2.4 1.6 3 2.5.6.8.9 1.9.9 3.3v4.7c0 2.1-.8 3.2-2.3 3.2-.8 0-2.1-.4-3.8-1.2-5.7-2.6-12.1-3.9-19.2-3.9-5.7 0-10.2.9-13.3 2.8-3.1 1.9-4.7 4.8-4.7 8.9 0 2.8.9 5.2 2.8 7.1 1.9 1.9 5.7 3.8 11.4 5.5l14.2 4.5c7.2 2.3 12.4 5.5 15.5 9.6 3.1 4.1 4.6 8.8 4.6 14 0 4.3-.9 8.2-2.6 11.6-1.8 3.4-4.2 6.4-7.3 8.8-3.1 2.5-6.8 4.3-11.1 5.6-4.5 1.4-9.2 2.1-14.3 2.1z" fill="#6366F1"/>
+                    <path d="M273.5 143.7c-32.9 24.3-80.7 37.2-121.8 37.2-57.6 0-109.5-21.3-148.7-56.7-3.1-2.8-.3-6.6 3.4-4.4 42.4 24.6 94.7 39.5 148.8 39.5 36.5 0 76.6-7.6 113.5-23.2 5.5-2.5 10.2 3.6 4.8 7.6z" fill="#8B5CF6"/>
+                </svg>
+                <div class="tech-name">AWS Bedrock</div>
+                <div class="tech-desc">Claude Haiku 4.5</div>
+            </a>
+
+            <!-- Lambda -->
+            <a href="https://aws.amazon.com/lambda/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="256" height="256" fill="#6366F1" opacity="0.1" rx="12"/>
+                    <path d="M128 64L64 128L128 192M128 64L192 128L128 192" stroke="#8B5CF6" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="tech-name">AWS Lambda</div>
+                <div class="tech-desc">Serverless compute</div>
+            </a>
+
+            <!-- DynamoDB -->
+            <a href="https://aws.amazon.com/dynamodb/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 128L128 180L206 128M50 80L128 32L206 80L128 128L50 80ZM50 176L128 224L206 176" stroke="#06B6D4" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="tech-name">DynamoDB</div>
+                <div class="tech-desc">NoSQL database</div>
+            </a>
+
+            <!-- Spotify -->
+            <a href="https://developer.spotify.com/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 168 168" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M83.996 0.277c-46.249 0-83.743 37.493-83.743 83.742 0 46.251 37.494 83.741 83.743 83.741 46.254 0 83.744-37.49 83.744-83.741 0-46.246-37.49-83.738-83.745-83.738l0.001-0.004zm38.404 120.78c-1.5 2.46-4.72 3.24-7.18 1.73-19.662-12.01-44.414-14.73-73.564-8.07-2.809 0.64-5.609-1.12-6.249-3.93-0.643-2.81 1.11-5.61 3.926-6.25 31.9-7.291 59.263-4.15 81.337 9.34 2.46 1.51 3.24 4.72 1.73 7.18zm10.25-22.805c-1.89 3.075-5.91 4.045-8.98 2.155-22.51-13.839-56.823-17.846-83.448-9.764-3.453 1.043-7.1-0.903-8.148-4.35-1.04-3.453 0.907-7.093 4.354-8.143 30.413-9.228 68.222-4.758 94.072 11.127 3.07 1.89 4.04 5.91 2.15 8.976v-0.001zm0.88-23.744c-26.99-16.031-71.52-17.505-97.289-9.684-4.138 1.255-8.514-1.081-9.768-5.219-1.254-4.14 1.08-8.513 5.221-9.771 29.581-8.98 78.756-7.245 109.83 11.202 3.73 2.209 4.95 7.016 2.74 10.733-2.2 3.722-7.02 4.949-10.73 2.739z" fill="#1DB954"/>
+                </svg>
+                <div class="tech-name">Spotify API</div>
+                <div class="tech-desc">Music integration</div>
+            </a>
+
+            <!-- Python -->
+            <a href="https://www.python.org/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="pythonBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#387EB8"/>
+                            <stop offset="100%" stop-color="#366994"/>
+                        </linearGradient>
+                        <linearGradient id="pythonYellow" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#FFE873"/>
+                            <stop offset="100%" stop-color="#FFD43B"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M49.33 5c-7.24 0-13.5 5.89-13.5 13.13v7.87h13.5v1.75H28.5c-7.64 0-14 6.36-14 14v17.5c0 7.64 6.36 13.12 14 13.12h8.75v-11.62c0-7.24 6.26-13.63 13.5-13.63h27c7.24 0 13.5-6.26 13.5-13.5v-15.5c0-7.24-6.26-13.12-13.5-13.12H49.33zm-1.75 8.75c2.42 0 4.37 1.95 4.37 4.38 0 2.42-1.95 4.37-4.37 4.37-2.43 0-4.38-1.95-4.38-4.37 0-2.43 1.95-4.38 4.38-4.38z" fill="url(#pythonBlue)"/>
+                    <path d="M77.83 27.37v11.38c0 7.24-6.26 13.62-13.5 13.62h-27c-7.24 0-13.5 6.26-13.5 13.5v15.5c0 7.24 6.26 13.5 13.5 13.5h21.84c7.24 0 13.5-5.89 13.5-13.13v-7.87h-13.5v-1.75h21.83c7.64 0 10.5-5.32 10.5-12.95v-17.5c0-7.64-2.86-14.3-10.5-14.3h-3.17zm-13.5 54.25c2.42 0 4.37 1.95 4.37 4.38 0 2.42-1.95 4.37-4.37 4.37-2.43 0-4.38-1.95-4.38-4.37 0-2.43 1.95-4.38 4.38-4.38z" fill="url(#pythonYellow)"/>
+                </svg>
+                <div class="tech-name">Python</div>
+                <div class="tech-desc">Backend runtime</div>
+            </a>
+
+            <!-- Claude (Anthropic) -->
+            <a href="https://www.anthropic.com/claude" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="256" height="256" rx="48" fill="#D97757"/>
+                    <path d="M80 70L128 180L176 70" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M100 120H156" stroke="white" stroke-width="16" stroke-linecap="round"/>
+                </svg>
+                <div class="tech-name">Claude</div>
+                <div class="tech-desc">Anthropic AI model</div>
+            </a>
+
+            <!-- Amazon Q -->
+            <a href="https://aws.amazon.com/q/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="128" cy="128" r="100" fill="#232F3E"/>
+                    <text x="128" y="160" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#FF9900" text-anchor="middle">Q</text>
+                    <circle cx="180" cy="180" r="20" fill="#FF9900"/>
+                </svg>
+                <div class="tech-name">Amazon Q</div>
+                <div class="tech-desc">AI assistant</div>
+            </a>
+
+            <!-- Amazon Nova Act -->
+            <a href="https://aws.amazon.com/bedrock/nova/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="nova" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FF9900"/>
+                            <stop offset="100%" stop-color="#FF6B00"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="128" cy="128" r="80" fill="url(#nova)" opacity="0.2"/>
+                    <path d="M128 48 L168 88 L148 128 L188 168 L128 208 L68 168 L108 128 L88 88 Z" fill="url(#nova)"/>
+                    <circle cx="128" cy="128" r="20" fill="#232F3E"/>
+                </svg>
+                <div class="tech-name">Amazon Nova Act</div>
+                <div class="tech-desc">Multimodal AI</div>
+            </a>
+
+            <!-- Bedrock AgentCore -->
+            <a href="https://aws.amazon.com/bedrock/agents/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="256" height="256" fill="#232F3E" opacity="0.1" rx="24"/>
+                    <circle cx="128" cy="80" r="24" fill="#FF9900"/>
+                    <circle cx="80" cy="160" r="24" fill="#FF9900"/>
+                    <circle cx="176" cy="160" r="24" fill="#FF9900"/>
+                    <line x1="128" y1="104" x2="100" y2="140" stroke="#FF9900" stroke-width="8"/>
+                    <line x1="128" y1="104" x2="156" y2="140" stroke="#FF9900" stroke-width="8"/>
+                </svg>
+                <div class="tech-name">AgentCore</div>
+                <div class="tech-desc">Multi-agent orchestration</div>
+            </a>
+
+            <!-- Windsurf -->
+            <a href="https://codeium.com/windsurf" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Background -->
+                    <rect width="100" height="100" rx="20" fill="#0F2942"/>
+                    <!-- W shape - Windsurf official logo -->
+                    <path d="M20 30 L25 60 L32 35 L40 60 L48 35 L55 60 L62 35 L70 60 L75 30" 
+                          stroke="white" 
+                          stroke-width="6" 
+                          stroke-linecap="round" 
+                          stroke-linejoin="round" 
+                          fill="none"/>
+                </svg>
+                <div class="tech-name">Windsurf</div>
+                <div class="tech-desc">AI code editor</div>
+            </a>
+
+            <!-- API Gateway -->
+            <a href="https://aws.amazon.com/api-gateway/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="128" cy="60" r="16" fill="#8B5CF6"/>
+                    <circle cx="60" cy="196" r="16" fill="#8B5CF6"/>
+                    <circle cx="196" cy="196" r="16" fill="#8B5CF6"/>
+                    <circle cx="128" cy="128" r="20" fill="#6366F1"/>
+                    <line x1="128" y1="76" x2="128" y2="108" stroke="#A5B4FC" stroke-width="4"/>
+                    <line x1="128" y1="148" x2="75" y2="183" stroke="#A5B4FC" stroke-width="4"/>
+                    <line x1="128" y1="148" x2="181" y2="183" stroke="#A5B4FC" stroke-width="4"/>
+                </svg>
+                <div class="tech-name">API Gateway</div>
+                <div class="tech-desc">RESTful endpoints</div>
+            </a>
+
+            <!-- S3 -->
+            <a href="https://aws.amazon.com/s3/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="48" y="48" width="160" height="160" rx="8" stroke="#10B981" stroke-width="8" fill="none"/>
+                    <rect x="72" y="72" width="112" height="112" fill="#10B981" opacity="0.2"/>
+                    <path d="M96 128L128 96L160 128L128 160L96 128Z" fill="#10B981"/>
+                </svg>
+                <div class="tech-name">Amazon S3</div>
+                <div class="tech-desc">Static hosting</div>
+            </a>
+
+            <!-- CloudFront -->
+            <a href="https://aws.amazon.com/cloudfront/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="128" cy="128" r="80" stroke="#06B6D4" stroke-width="8" fill="none"/>
+                    <circle cx="128" cy="128" r="50" stroke="#06B6D4" stroke-width="6" fill="none"/>
+                    <circle cx="128" cy="128" r="20" fill="#06B6D4"/>
+                    <path d="M128 48L128 108M128 148L128 208M48 128L108 128M148 128L208 128" stroke="#06B6D4" stroke-width="4"/>
+                </svg>
+                <div class="tech-name">CloudFront</div>
+                <div class="tech-desc">Global CDN</div>
+            </a>
+
+            <!-- AWS CDK -->
+            <a href="https://aws.amazon.com/cdk/" target="_blank" class="tech-card">
+                <svg height="48" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="40" y="60" width="60" height="60" rx="4" fill="#8B5CF6" opacity="0.3"/>
+                    <rect x="120" y="60" width="60" height="60" rx="4" fill="#6366F1" opacity="0.5"/>
+                    <rect x="40" y="140" width="60" height="60" rx="4" fill="#6366F1" opacity="0.5"/>
+                    <rect x="120" y="140" width="60" height="60" rx="4" fill="#8B5CF6" opacity="0.7"/>
+                    <path d="M200 100L220 120L200 140" stroke="#A5B4FC" stroke-width="6" stroke-linecap="round"/>
+                </svg>
+                <div class="tech-name">AWS CDK</div>
+                <div class="tech-desc">Infrastructure as Code</div>
+            </a>
+        </div>
+        <div class="footer-info">
+            <p style="font-size: 18px; font-weight: 600; color: #F8FAFC; margin-bottom: 8px;">AI DJ</p>
+            <p style="color: #94A3B8; margin-top: 8px; font-size: 14px;">AWS AI Agent Global Hackathon 2025</p>
+            <p style="color: #64748B; margin-top: 8px; font-size: 13px;">Intelligent playlist generation powered by 4 AWS AI services</p>
+            <div class="footer-links">
+                <a href="https://github.com/yourusername/ai-dj" class="footer-link" target="_blank">GitHub</a>
+                <a href="https://aws.amazon.com" class="footer-link" target="_blank">AWS</a>
+                <a href="https://aws-agent-hackathon.devpost.com" class="footer-link" target="_blank">Hackathon</a>
+            </div>
+            <p style="font-size: 11px; margin-top: 20px; color: #475569;">
+                © 2025 AI DJ. All rights reserved.
+            </p>
+        </div>
+    </footer>
 </body>
 </html>

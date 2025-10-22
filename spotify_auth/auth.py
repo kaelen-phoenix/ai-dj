@@ -14,6 +14,13 @@ import urllib.error
 def lambda_handler(event, context):
     """Handler para el callback de Spotify OAuth"""
     
+    print(f"📥 OAuth Callback - Event: {json.dumps(event)}")
+    
+    # Log request details
+    print(f"🔍 Request context: {json.dumps(event.get('requestContext', {}))}")
+    print(f"🔍 Query params: {json.dumps(event.get('queryStringParameters', {}))}")
+    print(f"🔍 Headers: {json.dumps(event.get('headers', {}))}")
+    
     # CORS headers
     headers = {
         'Content-Type': 'text/html',
@@ -24,6 +31,7 @@ def lambda_handler(event, context):
     
     # Manejar OPTIONS para CORS
     if event.get('requestContext', {}).get('http', {}).get('method') == 'OPTIONS':
+        print("✅ Handling OPTIONS request")
         return {
             'statusCode': 200,
             'headers': headers,
@@ -63,16 +71,31 @@ def lambda_handler(event, context):
     client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET')
     redirect_uri = os.environ.get('REDIRECT_URI')
     
+    print(f"🔑 Env vars - CLIENT_ID: {client_id[:10] if client_id else 'MISSING'}...")
+    print(f"🔑 CLIENT_SECRET: {'SET' if client_secret else 'MISSING'}")
+    print(f"🔑 REDIRECT_URI: {redirect_uri}")
+    
     if not all([client_id, client_secret, redirect_uri]):
+        missing = []
+        if not client_id: missing.append('CLIENT_ID')
+        if not client_secret: missing.append('CLIENT_SECRET')
+        if not redirect_uri: missing.append('REDIRECT_URI')
+        error_msg = f'Server configuration error - Missing: {", ".join(missing)}'
+        print(f"❌ {error_msg}")
         return {
             'statusCode': 500,
             'headers': headers,
-            'body': create_error_page('Server configuration error')
+            'body': create_error_page(error_msg)
         }
     
     # Intercambiar código por token
     try:
+        print(f"🔄 Exchanging code for token - code length: {len(code)}")
         token_data = exchange_code_for_token(code, client_id, client_secret, redirect_uri)
+        
+        print(f"✅ Token exchange successful!")
+        print(f"🔑 Access token length: {len(token_data.get('access_token', ''))}")
+        print(f"⏱️ Expires in: {token_data.get('expires_in', 'N/A')} seconds")
         
         # Crear página HTML que guarda el token y redirige
         html = create_success_page(token_data)
@@ -84,6 +107,10 @@ def lambda_handler(event, context):
         }
         
     except Exception as e:
+        print(f"❌ Error in token exchange: {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': headers,
@@ -187,13 +214,27 @@ def create_success_page(token_data):
         <script>
             // Redirect immediately with token in hash - compatible with mobile
             (function() {{
-                try {{
-                    // Try to redirect
-                    window.location.replace('{redirect_url}');
-                }} catch(e) {{
-                    // Fallback
-                    window.location.href = '{redirect_url}';
-                }}
+                console.log('🔄 OAuth Success Page Loaded');
+                console.log('🔑 Redirect URL:', '{redirect_url}');
+                console.log('🔑 Token length: {len(access_token)}');
+                
+                // Add visible countdown
+                let countdown = 2;
+                const countdownEl = document.getElementById('countdown');
+                const interval = setInterval(() => {{
+                    countdown--;
+                    if (countdownEl) countdownEl.textContent = countdown;
+                    if (countdown <= 0) {{
+                        clearInterval(interval);
+                        console.log('🚀 Redirecting now...');
+                        try {{
+                            window.location.replace('{redirect_url}');
+                        }} catch(e) {{
+                            console.error('❌ Replace failed, trying href:', e);
+                            window.location.href = '{redirect_url}';
+                        }}
+                    }}
+                }}, 1000);
             }})();
         </script>
     </head>
@@ -201,10 +242,13 @@ def create_success_page(token_data):
         <div class="container">
             <h1>✅ Authentication Successful</h1>
             <div class="spinner"></div>
-            <p>Redirecting to AI DJ...</p>
-            <p style="font-size: 12px; margin-top: 20px; color: #999;">
-                If you're not redirected automatically, 
-                <a href="{redirect_url}" style="color: #FF9900;">click here</a>
+            <p>Redirecting to AI DJ in <span id="countdown" style="color: #FF9900; font-weight: bold;">2</span> seconds...</p>
+            <p style="font-size: 14px; margin-top: 20px; color: #ccc;">
+                <strong>Note:</strong> If you used email/password and you're not redirected,<br>
+                please click the link below:
+            </p>
+            <p style="font-size: 12px; margin-top: 10px;">
+                <a href="{redirect_url}" style="color: #FF9900; font-size: 16px; text-decoration: underline;">Click here to continue</a>
             </p>
         </div>
     </body>

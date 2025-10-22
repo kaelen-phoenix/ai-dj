@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - AI DJ</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #232F3E 0%, #131A22 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            border-radius: 20px;
+        }
+
+        .header h1 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .login-box {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 153, 0, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 153, 0, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #FF9900;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #FF9900 0%, #EC7211 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: #ff6b6b;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 153, 0, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 153, 0, 0.3);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FF9900;
+        }
+
+        .stat-label {
+            color: #b3b3b3;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .user-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 153, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-email {
+            color: #FF9900;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .user-date {
+            color: #b3b3b3;
+            font-size: 13px;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+            width: auto;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-approved {
+            background: rgba(29, 185, 84, 0.2);
+            color: #1DB954;
+        }
+
+        .status-pending {
+            background: rgba(255, 153, 0, 0.2);
+            color: #FF9900;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #FF9900;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 153, 0, 0.3);
+            border-top: 3px solid #FF9900;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            background: rgba(29, 185, 84, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(29, 185, 84, 0.3);
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            color: #1DB954;
+            margin-bottom: 15px;
+        }
+
+        .instructions ol {
+            color: #fff;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 AI DJ - Admin Panel</h1>
+            <p style="color: rgba(255, 255, 255, 0.9); margin-top: 10px;">Manage Spotify Access Requests</p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginSection" class="login-box">
+            <h2 style="color: #FF9900; margin-bottom: 20px; text-align: center;">Administrator Login</h2>
+            
+            <form onsubmit="login(); return false;" method="post" action="">
+                <div class="input-group">
+                    <label for="username">Username:</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username"
+                        autocomplete="username"
+                        placeholder="Enter username" 
+                    />
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password:</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        autocomplete="current-password"
+                        placeholder="Enter password" 
+                    />
+                </div>
+                
+                <button type="submit">🔓 Login</button>
+            </form>
+            <p id="loginError" class="error"></p>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="color: #FF9900;">User Management</h2>
+                <button onclick="logout()" class="btn-small">🚪 Logout</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvedUsers">0</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingUsers">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+
+            <button onclick="loadUsers()" style="margin-bottom: 20px;">🔄 Refresh List</button>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading users...</p>
+            </div>
+
+            <div id="usersList"></div>
+
+            <div class="instructions">
+                <h3>📝 How to fully authorize a user:</h3>
+                <ol>
+                    <li>Check the ✅ checkbox next to the user's email</li>
+                    <li>Copy the email</li>
+                    <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" style="color: #1DB954;">Spotify Dashboard</a></li>
+                    <li>Select your app → Settings → User Management → Add User</li>
+                    <li>Paste the email and save</li>
+                </ol>
+                <p style="color: #b3b3b3; margin-top: 15px; font-size: 14px;">
+                    <strong>Note:</strong> Both steps are required. Users need to be approved here AND added to Spotify whitelist.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/admin/requests';
+        const APPROVE_ENDPOINT = 'https://08zk6n0hhf.execute-api.us-east-1.amazonaws.com/admin/approve';
+        const ADMIN_USERNAME = 'nomade';
+        const ADMIN_PASSWORD = 'eternauta';
+        let isLoggedIn = false;
+
+        // Check if already logged in on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedLogin = localStorage.getItem('admin_logged_in');
+            if (savedLogin === 'true') {
+                isLoggedIn = true;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadUsers();
+            }
+        });
+
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('loginError');
+
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                isLoggedIn = true;
+                localStorage.setItem('admin_logged_in', 'true');
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                errorEl.textContent = '';
+                loadUsers();
+            } else {
+                errorEl.textContent = '❌ Invalid credentials';
+            }
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            localStorage.removeItem('admin_logged_in');
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        async function loadUsers() {
+            if (!isLoggedIn) return;
+
+            const loading = document.getElementById('loading');
+            const listEl = document.getElementById('usersList');
+
+            loading.style.display = 'block';
+            listEl.innerHTML = '';
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-user': ADMIN_USERNAME,
+                        'x-admin-pass': ADMIN_PASSWORD
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch users');
+
+                const data = await response.json();
+                const users = data.requests || [];
+
+                loading.style.display = 'none';
+
+                // Update stats
+                const approved = users.filter(u => u.approved).length;
+                const pending = users.length - approved;
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('approvedUsers').textContent = approved;
+                document.getElementById('pendingUsers').textContent = pending;
+
+                if (users.length === 0) {
+                    listEl.innerHTML = '<p style="text-align: center; color: #b3b3b3; padding: 40px;">No users found</p>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const date = new Date(user.timestamp);
+                    const card = document.createElement('div');
+                    card.className = 'user-card';
+                    card.innerHTML = `
+                        <div class="user-info">
+                            <div class="user-email">${user.email}</div>
+                            <div class="user-date">📅 ${date.toLocaleString()}</div>
+                        </div>
+                        <div class="user-actions">
+                            <span class="status-badge ${user.approved ? 'status-approved' : 'status-pending'}">
+                                ${user.approved ? 'APPROVED' : 'PENDING'}
+                            </span>
+                            <div class="checkbox-container">
+                                <input 
+                                    type="checkbox" 
+                                    id="check_${user.email}" 
+                                    ${user.approved ? 'checked' : ''}
+                                    onchange="toggleApproval('${user.email}', this.checked)"
+                                />
+                                <label for="check_${user.email}" style="color: #fff; cursor: pointer;">Approve</label>
+                            </div>
+                            <button onclick="copyEmail('${user.email}')" class="btn-small">📋 Copy</button>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+
+            } catch (error) {
+                loading.style.display = 'none';
+                console.error('Error loading users:', error);
+                listEl.innerHTML = `
+                    <div style="background: rgba(255, 107, 107, 0.1); padding: 30px; border-radius: 12px; text-align: center;">
+                        <h3 style="color: #ff6b6b; margin-bottom: 15px;">❌ Error Loading Users</h3>
+                        <p style="color: #fff; margin-bottom: 10px;">${error.message}</p>
+                        <p style="color: #b3b3b3; font-size: 14px; margin-bottom: 20px;">
+                            This could be a CORS or authentication issue.<br>
+                            Check the browser console for more details.
+                        </p>
+                        <button onclick="loadUsers()" style="padding: 10px 20px; background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; border-radius: 6px; color: #FF9900; cursor: pointer;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function toggleApproval(email, approved) {
+            try {
+                const response = await fetch(APPROVE_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-user': ADMIN_USERNAME,
+                        'x-admin-pass': ADMIN_PASSWORD
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        approved: approved
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update approval status');
+
+                // Reload users to update stats
+                loadUsers();
+            } catch (error) {
+                alert('Error: ' + error.message);
+                // Revert checkbox
+                document.getElementById(`check_${email}`).checked = !approved;
+            }
+        }
+
+        function copyEmail(email) {
+            navigator.clipboard.writeText(email).then(() => {
+                alert('✅ Email copied: ' + email);
+            }).catch(() => {
+                prompt('Copy this email:', email);
+            });
+        }
+    </script>
+</body>
+</html>
