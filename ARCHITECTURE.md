@@ -18,156 +18,83 @@ AI DJ is an intelligent, serverless music playlist generator that leverages **fo
 
 
 ```mermaid
-graph TB
-    %% Frontend Layer
-    User[👤 Usuario]
-    CF[<img src='https://icon.icepanel.io/AWS/svg/Networking-Content-Delivery/CloudFront.svg' width='40'/><br/>Amazon CloudFront<br/>CDN Global]
-    S3[<img src='https://icon.icepanel.io/AWS/svg/Storage/Simple-Storage-Service.svg' width='40'/><br/>Amazon S3<br/>Frontend Static]
+flowchart TD
+    START([👤 Usuario])
     
-    %% API Layer
-    APIGW[<img src='https://icon.icepanel.io/AWS/svg/App-Integration/API-Gateway.svg' width='40'/><br/>Amazon API Gateway<br/>HTTP API]
+    subgraph FRONTEND["🌐 FRONTEND LAYER"]
+        CF["☁️ CloudFront<br/>CDN Global<br/>HTTPS + DDoS"]
+        S3["📦 S3 Static Hosting<br/>SPA + OAuth 2.0<br/>4 Modos Interactivos"]
+    end
     
-    %% Lambda Functions
-    L1[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda Classic<br/>Generación Simple]
-    L2[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda AgentCore<br/>Conversación Multi-turno]
-    L3[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda Nova<br/>Análisis de Imágenes]
-    L4[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda Knowledge<br/>Q&A Musical]
+    subgraph API["🚪 API LAYER"]
+        GW["API Gateway HTTP"]
+        E1["/playlist"]
+        E2["/agent/chat"]
+        E3["/playlist-from-image"]
+        E4["/music-knowledge"]
+    end
     
-    %% AI Services
-    BEDROCK[<img src='https://icon.icepanel.io/AWS/svg/Machine-Learning/Bedrock.svg' width='40'/><br/>Amazon Bedrock<br/>Claude Haiku + Nova Act]
+    subgraph COMPUTE["⚡ COMPUTE LAYER"]
+        L1["Lambda Classic<br/>512MB | 60s"]
+        L2["Lambda AgentCore<br/>1536MB | 29s"]
+        L3["Lambda Nova<br/>512MB | 60s"]
+        L4["Lambda Knowledge<br/>512MB | 60s"]
+    end
     
-    %% Database
-    DDB[<img src='https://icon.icepanel.io/AWS/svg/Database/DynamoDB.svg' width='40'/><br/>Amazon DynamoDB<br/>Usuarios + Conversaciones]
+    subgraph AI["🤖 AI SERVICES - AMAZON BEDROCK"]
+        direction TB
+        AI1["🔷 Bedrock AgentCore<br/>Multi-turn Conversations<br/>Session Management<br/>claude-haiku-4-5"]
+        AI2["🔷 Bedrock Application<br/>Playlist Generation<br/>NLU + JSON Output<br/>claude-haiku-4-5"]
+        AI3["🔷 Nova Act<br/>Multimodal Analysis<br/>Image → Music<br/>nova-lite-v1:0"]
+        AI4["🔷 Amazon Q Pattern<br/>Knowledge Base<br/>Q&A + Enhancement<br/>Bedrock Prompts"]
+    end
     
-    %% External API
-    SPOTIFY[🎵 Spotify Web API<br/>Búsqueda y Playlists]
+    subgraph STORAGE["💾 DATA LAYER"]
+        DB[(DynamoDB<br/>━━━━━━━<br/>Users<br/>Conversations<br/>Sessions<br/>Playlists)]
+    end
     
-    %% Connections
-    User -->|HTTPS| CF
-    CF -->|Cache| S3
-    CF -->|API Calls| APIGW
+    subgraph EXTERNAL["🎵 EXTERNAL"]
+        SPOT[Spotify API<br/>━━━━━━━<br/>OAuth 2.0<br/>Search<br/>Create Playlists]
+    end
     
-    APIGW -->|/classic| L1
-    APIGW -->|/chat| L2
-    APIGW -->|/image| L3
-    APIGW -->|/knowledge| L4
+    START --> CF
+    CF --> S3
+    S3 --> GW
     
-    L1 -->|Bedrock API| BEDROCK
-    L2 -->|AgentCore Pattern| BEDROCK
-    L3 -->|Nova Act| BEDROCK
-    L4 -->|Amazon Q Pattern| BEDROCK
+    GW --> E1 --> L1
+    GW --> E2 --> L2
+    GW --> E3 --> L3
+    GW --> E4 --> L4
     
-    L1 -->|Guardar/Leer| DDB
-    L2 -->|Sesiones| DDB
-    L3 -->|Historial| DDB
-    L4 -->|Datos| DDB
+    L1 --> AI2
+    L2 --> AI1
+    L3 --> AI3
+    L4 --> AI4
     
-    L1 -->|Crear Playlist| SPOTIFY
-    L2 -->|Buscar Canciones| SPOTIFY
-    L3 -->|API Music| SPOTIFY
+    L1 & L2 & L3 & L4 --> DB
+    L1 & L2 & L3 --> SPOT
+    
+    AI1 -.->|Session| DB
     
     %% Styling
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:#fff
-    classDef frontend fill:#3B48CC,stroke:#232F3E,stroke-width:2px,color:#fff
-    classDef external fill:#1DB954,stroke:#191414,stroke-width:2px,color:#fff
+    classDef frontend fill:#3B48CC,stroke:#fff,stroke-width:2px,color:#fff
+    classDef api fill:#FF9900,stroke:#fff,stroke-width:2px,color:#232F3E
+    classDef compute fill:#FF6600,stroke:#fff,stroke-width:2px,color:#fff
+    classDef ai fill:#00A1C9,stroke:#fff,stroke-width:2px,color:#fff
+    classDef data fill:#3F8624,stroke:#fff,stroke-width:2px,color:#fff
+    classDef external fill:#1DB954,stroke:#fff,stroke-width:2px,color:#fff
     
-    class CF,S3,APIGW,L1,L2,L3,L4,BEDROCK,DDB aws
-    class User frontend
-    class SPOTIFY external
+    class CF,S3 frontend
+    class GW,E1,E2,E3,E4 api
+    class L1,L2,L3,L4 compute
+    class AI1,AI2,AI3,AI4 ai
+    class DB data
+    class SPOT external
+
 ```
 
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              USER INTERFACE                                  │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │                    Amazon CloudFront (Global CDN)                     │  │
-│  │  - HTTPS/SSL Encryption    - Edge Caching    - DDoS Protection       │  │
-│  └──────────────────────────────────────────────────────────────────────┘  │
-│                                      ▼                                       │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │             Amazon S3 (Static Website Hosting)                        │  │
-│  │  - Single Page Application (HTML/CSS/JS)                              │  │
-│  │  - Spotify OAuth 2.0 Integration                                      │  │
-│  │  - 4 Interactive Modes: Classic, Chat, Image, Knowledge               │  │
-│  └──────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           API GATEWAY (HTTP API)                             │
-│  ┌──────────────┬─────────────────┬──────────────────┬──────────────────┐  │
-│  │ /playlist    │ /agent/chat     │ /playlist-from-  │ /music-knowledge │  │
-│  │ (Classic)    │ (AgentCore)     │ image (Nova)     │ (Amazon Q)       │  │
-│  └──────────────┴─────────────────┴──────────────────┴──────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-         │                  │                    │                    │
-         ▼                  ▼                    ▼                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         AWS LAMBDA FUNCTIONS                                 │
-│                                                                               │
-│  ┌──────────────┐  ┌─────────────────┐  ┌────────────────┐  ┌────────────┐│
-│  │  Classic     │  │  AgentCore      │  │  Nova Image    │  │  Knowledge ││
-│  │  Handler     │  │  Handler        │  │  Handler       │  │  Handler   ││
-│  │              │  │                 │  │                │  │            ││
-│  │  Python 3.12 │  │  Python 3.12    │  │  Python 3.12   │  │  Python    ││
-│  │  512 MB      │  │  1536 MB        │  │  512 MB        │  │  512 MB    ││
-│  │  60s timeout │  │  29s timeout    │  │  60s timeout   │  │  60s       ││
-│  └──────┬───────┘  └────────┬────────┘  └───────┬────────┘  └──────┬─────┘│
-└─────────┼────────────────────┼───────────────────┼──────────────────┼──────┘
-          │                    │                   │                  │
-          └────────────────────┴───────────────────┴──────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       AMAZON BEDROCK (AI SERVICES)                           │
-│                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────┐│
-│  │ ① Amazon Bedrock AgentCore (Multi-turn Conversations)                  ││
-│  │    - Session Management with DynamoDB                                   ││
-│  │    - Context-aware Question Generation (Amazon Q Pattern)              ││
-│  │    - Action Orchestration for Playlist Creation                         ││
-│  │    Model: us.anthropic.claude-haiku-4-5-20251001-v1:0                  ││
-│  └────────────────────────────────────────────────────────────────────────┘│
-│                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────┐│
-│  │ ② Amazon Bedrock Application (Intelligent Playlist Generation)         ││
-│  │    - Prompt Enhancement (Amazon Q Pattern)                              ││
-│  │    - Natural Language Understanding                                     ││
-│  │    - Structured JSON Output Generation                                  ││
-│  │    Model: us.anthropic.claude-haiku-4-5-20251001-v1:0                  ││
-│  └────────────────────────────────────────────────────────────────────────┘│
-│                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────┐│
-│  │ ③ Amazon Nova Act (Multimodal Image Analysis)                          ││
-│  │    - Artist/Celebrity Detection                                         ││
-│  │    - Visual Theme Analysis (mood, energy, color)                       ││
-│  │    - Music Genre Recommendation from Images                            ││
-│  │    Model: us.amazon.nova-lite-v1:0                                     ││
-│  └────────────────────────────────────────────────────────────────────────┘│
-│                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────┐│
-│  │ ④ Amazon Q Pattern (Knowledge Retrieval & Question Generation)         ││
-│  │    - Music Knowledge Base Q&A                                          ││
-│  │    - Intelligent Question Generation for Chat                          ││
-│  │    - Prompt Enhancement for Better Results                             ││
-│  │    Implementation: Bedrock with specialized prompts                     ││
-│  └────────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       DATA & INTEGRATION LAYER                               │
-│                                                                               │
-│  ┌──────────────────────────┐    ┌──────────────────────────────────────┐  │
-│  │  Amazon DynamoDB          │    │  Spotify Web API                     │  │
-│  │  ├─ User Data             │    │  ├─ OAuth 2.0 Authentication         │  │
-│  │  ├─ Conversation History  │    │  ├─ Track Search                     │  │
-│  │  ├─ Session State         │    │  ├─ Playlist Creation                │  │
-│  │  └─ Playlist Metadata     │    │  └─ Add Tracks to Playlist           │  │
-│  └──────────────────────────┘    └──────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+
 
 ## Components
 
