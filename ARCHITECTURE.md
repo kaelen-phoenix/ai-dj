@@ -16,6 +16,67 @@ AI DJ is an intelligent, serverless music playlist generator that leverages **fo
 
 ## Architecture Diagram
 
+
+```mermaid
+graph TB
+    %% Frontend Layer
+    User[👤 Usuario]
+    CF[<img src='https://icon.icepanel.io/AWS/svg/Networking-Content-Delivery/CloudFront.svg' width='40'/><br/>Amazon CloudFront<br/>CDN Global]
+    S3[<img src='https://icon.icepanel.io/AWS/svg/Storage/Simple-Storage-Service.svg' width='40'/><br/>Amazon S3<br/>Frontend Static]
+    
+    %% API Layer
+    APIGW[<img src='https://icon.icepanel.io/AWS/svg/App-Integration/API-Gateway.svg' width='40'/><br/>Amazon API Gateway<br/>HTTP API]
+    
+    %% Lambda Functions
+    L1[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda Classic<br/>Generación Simple]
+    L2[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda AgentCore<br/>Conversación Multi-turno]
+    L3[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda Nova<br/>Análisis de Imágenes]
+    L4[<img src='https://icon.icepanel.io/AWS/svg/Compute/Lambda.svg' width='40'/><br/>Lambda Knowledge<br/>Q&A Musical]
+    
+    %% AI Services
+    BEDROCK[<img src='https://icon.icepanel.io/AWS/svg/Machine-Learning/Bedrock.svg' width='40'/><br/>Amazon Bedrock<br/>Claude Haiku + Nova Act]
+    
+    %% Database
+    DDB[<img src='https://icon.icepanel.io/AWS/svg/Database/DynamoDB.svg' width='40'/><br/>Amazon DynamoDB<br/>Usuarios + Conversaciones]
+    
+    %% External API
+    SPOTIFY[🎵 Spotify Web API<br/>Búsqueda y Playlists]
+    
+    %% Connections
+    User -->|HTTPS| CF
+    CF -->|Cache| S3
+    CF -->|API Calls| APIGW
+    
+    APIGW -->|/classic| L1
+    APIGW -->|/chat| L2
+    APIGW -->|/image| L3
+    APIGW -->|/knowledge| L4
+    
+    L1 -->|Bedrock API| BEDROCK
+    L2 -->|AgentCore Pattern| BEDROCK
+    L3 -->|Nova Act| BEDROCK
+    L4 -->|Amazon Q Pattern| BEDROCK
+    
+    L1 -->|Guardar/Leer| DDB
+    L2 -->|Sesiones| DDB
+    L3 -->|Historial| DDB
+    L4 -->|Datos| DDB
+    
+    L1 -->|Crear Playlist| SPOTIFY
+    L2 -->|Buscar Canciones| SPOTIFY
+    L3 -->|API Music| SPOTIFY
+    
+    %% Styling
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef frontend fill:#3B48CC,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef external fill:#1DB954,stroke:#191414,stroke-width:2px,color:#fff
+    
+    class CF,S3,APIGW,L1,L2,L3,L4,BEDROCK,DDB aws
+    class User frontend
+    class SPOTIFY external
+```
+
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              USER INTERFACE                                  │
